@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """
 Classes that use and/or depend on MERlin.
-
-Hazen 04/20
 """
 import csv
 import json
@@ -14,6 +12,17 @@ import merlin.data.dataorganization as merlin_do
 import merlin.data.codebook as merlin_co
 
 
+def getDataDirectory(filePath):
+    """
+    Return full path to data.
+    """
+    filePath = os.sep.join([merlin.CODEBOOK_HOME, filePath])
+    if not os.path.exists(filePath):
+        os.mkdir(filePath)
+
+    return filePath
+            
+    
 class Codebook(merlin_co.Codebook):
     """
     MERlin Codebook like class.
