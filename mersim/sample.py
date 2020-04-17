@@ -44,7 +44,7 @@ class SampleUniform(base.SimulationBase):
         ey = sy + image_size[1] - self._parameters["margin"]
 
         all_poly = []
-        for i in range(simParams.get_number_z()):
+        for zi in range(simParams.get_number_z()):
 
             tmp = []
             for fov in range(simParams.get_number_positions()):
