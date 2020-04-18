@@ -21,7 +21,12 @@ polygons per z plane.
 
 Polygons in the same z plane of the same type can overlap.
 """
+import matplotlib
+import matplotlib.pyplot as plt
+import os
 import shapely
+import shapely.geometry
+import shapely.ops
 
 import mersim.base as base
 
@@ -30,32 +35,76 @@ class SampleUniform(base.SimulationBase):
     """
     Uniform sample, i.e. no cells, etc.
     """
-    def layout(self, config, simParams):
+    def run_task(self, config, simParams):
         """
         This creates a rectangle that is centered on the FOV. The
         FOV may overlap.
 
-        All dimensions are microns.
+        Output dimensions are pixels.
         """
-        fov_size = simParams.get_microscope().get_fov_size()
-        sx = -0.5*fov_size[0] + self._parameters["margin"]
-        sy = -0.5*fov_size[1] + self._parameters["margin"]
-        ex = sx + image_size[0] - self._parameters["margin"]
-        ey = sy + image_size[1] - self._parameters["margin"]
+        super().run_task(config, simParams)
 
-        all_poly = []
+        fovSize = simParams.get_microscope().get_image_dimensions() 
+        umPerPix = simParams.get_microscope().get_microns_per_pixel()
+        
+        sx = -0.5*fovSize[0] + self._parameters["margin"]/umPerPix
+        sy = -0.5*fovSize[1] + self._parameters["margin"]/umPerPix
+        ex = sx + fovSize[0] - self._parameters["margin"]/umPerPix
+        ey = sy + fovSize[1] - self._parameters["margin"]/umPerPix
+
+        # Create save polygons.
+        allPoly = []
         for zi in range(simParams.get_number_z()):
 
             tmp = []
             for fov in range(simParams.get_number_positions()):
-                [px, py] = simParams.get_positions().getFOVXY(fov)
+                [px, py] = simParams.get_fov_xy(fov)
 
-                fov_rect = shapely.geometry.Polygon([px - sx, py - sy],
-                                                    [px - sx, py + sy],
-                                                    [px + sx, py + sy],
-                                                    [px + sx, py - sy])
-                tmp.append(fov_rect)
+                exRect = shapely.geometry.Polygon([[px - sx, py - sy],
+                                                   [px - sx, py + sy],
+                                                   [px + sx, py + sy],
+                                                   [px + sx, py - sy]])
+                tmp.append(exRect)
 
-            all_poly.append(tmp)
+            allPoly.append(tmp)
 
-        self.save_data({"extra-cellular" : all_poly})
+        self.save_data({"extra-cellular" : allPoly})
+
+        # Reference images.
+        allFOV = []
+        for fov in range(simParams.get_number_positions()):
+            allFOV.append(simParams.get_fov_rect(fov))
+
+        # Bounding box.
+        minx, miny, maxx, maxy = shapely.ops.unary_union(allFOV).bounds
+
+        for zi in range(simParams.get_number_z()):
+            fig = plt.figure(figsize = (8,8))
+
+            # Draw FOV.
+            for elt in allFOV:
+                coords = elt.exterior.coords.xy
+                x = list(coords[0])
+                y = list(coords[1])
+                plt.plot(x, y, color = 'gray')
+
+            # Draw extra-cellular space.
+            for elt in allPoly[zi]:
+                coords = elt.exterior.coords.xy
+                x = list(coords[0])
+                y = list(coords[1])
+                plt.plot(x, y, color = 'black')
+
+            ax = plt.gca()
+            ax.set_aspect('equal', 'datalim')
+            
+            plt.title("z plane {0:d}".format(zi))
+            plt.xlabel("pixels")
+            plt.ylabel("pixels")
+
+            fname = "z_{0:d}.pdf".format(zi)
+            fig.savefig(os.path.join(self.get_path(), fname),
+                        format='pdf',
+                        dpi=100)
+
+            plt.close()

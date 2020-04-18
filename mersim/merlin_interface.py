@@ -11,18 +11,37 @@ import merlin
 import merlin.data.dataorganization as merlin_do
 import merlin.data.codebook as merlin_co
 
+import mersim
+
 
 def getDataDirectory(filePath):
     """
     Return full path to data.
     """
-    filePath = os.sep.join([merlin.CODEBOOK_HOME, filePath])
-    if not os.path.exists(filePath):
-        os.mkdir(filePath)
+    if os.path.exists(filePath):
+        return filePath
 
-    return filePath
-            
-    
+    else:
+        filePath = os.sep.join([merlin.DATA_HOME, filePath])
+        if not os.path.exists(filePath):
+            os.mkdir(filePath)
+
+        return filePath
+
+
+def loadParameters(filePath):
+    """
+    Return full path to data.
+    """
+    if not os.path.exists(filePath):
+        filePath = os.path.join(mersim.SIMULATION_PARAMETERS_HOME, filePath)
+
+    with open(filePath) as fp:
+        config = json.load(fp)
+
+    return config
+
+
 class Codebook(merlin_co.Codebook):
     """
     MERlin Codebook like class.
@@ -92,7 +111,7 @@ class Positions(object):
     """
     Provides positions of simulated images.
     """
-    def __init__(self, filePath):
+    def __init__(self, filePath, umToPix):
         if not os.path.exists(filePath):
             filePath = os.sep.join(
                 [merlin.POSITION_HOME, filePath])
@@ -100,6 +119,13 @@ class Positions(object):
         self.data = pandas.read_csv(filePath,
                                     names = ["x", "y"])
 
+        self.data = self.data * umToPix
+
+    def get_fov_xy(self, fov):
+        return self.data.loc[fov,:].values.tolist()
+        
+    def get_number_positions(self):
+        return self.data.shape[0]
     
 class Microscope(object):
     """

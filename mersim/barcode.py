@@ -37,8 +37,8 @@ class BarcodeIntensityGaussian(base.SimulationBase):
         # ground truth.
         #
         for fov in range(simParams.get_number_positions()):
-            fov_rect = simParams.get_positions().getFOVRect(fov, simParams)
-            ox, oy = simParams.get_positions().getFOVOrigin(fov, simParams)
+            fovRect = simParams.get_fov_rect(fov, simParams)
+            ox, oy = simParams.get_fov_origin(fov, simParams)
 
             for zi in range(simParams.get_number_z()):
                 
