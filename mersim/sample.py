@@ -75,9 +75,6 @@ class SampleUniform(base.SimulationBase):
         for fov in range(simParams.get_number_positions()):
             allFOV.append(simParams.get_fov_rect(fov))
 
-        # Bounding box.
-        minx, miny, maxx, maxy = shapely.ops.unary_union(allFOV).bounds
-
         for zi in range(simParams.get_number_z()):
             fig = plt.figure(figsize = (8,8))
 

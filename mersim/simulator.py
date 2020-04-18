@@ -58,6 +58,9 @@ class SimulationParameters(object):
     def get_microscope(self):
         return self._microscope
 
+    def get_number_barcodes(self):
+        return self._codebook.get_barcodes().shape[0]
+
     def get_number_positions(self):
         return self._positions.get_number_positions()
 
@@ -110,7 +113,7 @@ def simulate(config, simParams, dataPath):
     config["layout_sample"].run_task(config, simParams)
 
     # Layout barcodes.
-#    config["layout_barcodes"].run_task(config, simParams)
+    config["layout_barcodes"].run_task(config, simParams)
 
     # Barcode intensities.
 #    config["barcode_intensity"].run_task(config, simParams)

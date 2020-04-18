@@ -2,8 +2,12 @@
 """
 Classes for barcode layout, intensity calculation and adding to an image.
 """
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
+import os
 import shapely
+import shapely.geometry
 
 import mersim.base as base
 
@@ -67,63 +71,111 @@ class BarcodeLocationsUniform(base.SimulationBase):
     """
     Uniform array of barcodes (in extra-cellular space).
     """
-    def layout(self, config, simParams):
+    def run_task(self, config, simParams):
         """
         This creates random barcodes in extra-cellular space.
         """
-        n_barcodes = simParams.get_number_barcodes()
-        n_z = simParams.get_number_z()
+        super().run_task(config, simParams)
+        
+        nBarcodes = simParams.get_number_barcodes()
+        nZ = simParams.get_number_z()
 
         # Load polygons describing sample geometry.
-        sample_data = config["layout_sample"].load_data()
-        ex_polygons = sample_data["extra-cellular"]
+        sampleData = config["layout_sample"].load_data()
+        exPolygons = sampleData["extra-cellular"]
 
         # Create unions for each z plane.
-        z_plane_bounds = []
-        z_plane_polys = []
-        for elt in ex_polygons:
-            p_union = shapely.ops.unary_union(elt)
-            z_plane_bounds.append(p_union.bounds)
-            z_plane_polys.append(p_union)
+        zPlaneBounds = []
+        zPlanePolys = []
+        for elt in exPolygons:
+            pUnion = shapely.ops.unary_union(elt)
+            zPlaneBounds.append(pUnion.bounds)
+            zPlanePolys.append(pUnion)
 
         # Calculate area.
-        total_area = 0.0
-        z_plane_areas = numpy.zeros(len(z_plane_polys))
-        for elt in z_plane_polys:
-            total_area += elt.area
-            z_plane_areas.append(elt.area)
+        totalArea = 0.0
+        zPlaneAreas = np.zeros(len(zPlanePolys))
+        for i, elt in enumerate(zPlanePolys):
+            totalArea += elt.area
+            zPlaneAreas[i] = elt.area
 
-        p_z = z_plane_areas/total_area
+        pZ = zPlaneAreas/totalArea
 
         # Barcodes randomly positioned in the polygons across z-planes.
-        n_pts = int(self.parameters["density"] * total_area)
+        #
+        # FIXME: Should do by z plane, as I don't think it is correctly
+        #        Choosing in it's current form.
+        #
+        nPts = int(self._parameters["density"] * totalArea)
 
-        code_x = numpy.zeros(n_pts)
-        code_y = numpy.zeros(n_pts)
-        code_z = numpy.zeros(n_pts, dtype = numpy.int)
-        code_id = numpy.zeros(n_pts, dtype = numpy.int)
+        codeX = np.zeros(nPts)
+        codeY = np.zeros(nPts)
+        codeZ = np.zeros(nPts, dtype = np.int)
+        codeID = np.zeros(nPts, dtype = np.int)
 
         cnt = 0
-        while(cnt < n_pts):
+        while(cnt < nPts):
+            if ((cnt % 10000) == 0):
+                print("  ", cnt, nPts)
 
             # Choose random Z plane.
-            zv = np.random.choice(n_z, p = p_z)
+            zv = np.random.choice(nZ, p = pZ)
 
             # Choose random XY.
-            minx, miny, maxx, maxy = z_plane_bounds[zv]
-            poly = z_plane_poly[zv]
-            
-            pnt = shapely.geometry.point(numpy.random.uniform(bounds[minx, maxx]),
-                                         numpy.random.uniform(bounds[miny, maxy]))
+            minx, miny, maxx, maxy = zPlaneBounds[zv]
+            poly = zPlanePolys[zv]
+
+            pnt = shapely.geometry.Point(np.random.uniform(minx, maxx),
+                                         np.random.uniform(miny, maxy))
 
             if poly.contains(pnt):
-                code_x[cnt] = pnt.x
-                code_y[cnt] = pnt.y
-                code_z[cnt] = zv
-                code_id[cnt] = np.random.choice(n_barcodes)
+                codeX[cnt] = pnt.x
+                codeY[cnt] = pnt.y
+                codeZ[cnt] = zv
+                codeID[cnt] = np.random.choice(nBarcodes)
                 
                 cnt += 1
 
         # Save barcodes. The 'barcode_intensity' task will use this to
         # create barcode information for each field.
-        self.save_data([code_x, code_y, code_z, code_id])
+        self.save_data([codeX, codeY, codeZ, codeID])
+
+        # Reference images.
+        allFOV = []
+        for fov in range(simParams.get_number_positions()):
+            allFOV.append(simParams.get_fov_rect(fov))
+
+        for zi in range(simParams.get_number_z()):
+            fig = plt.figure(figsize = (8,8))
+
+            # Draw FOV.
+            for elt in allFOV:
+                coords = elt.exterior.coords.xy
+                x = list(coords[0])
+                y = list(coords[1])
+                plt.plot(x, y, color = 'gray')
+
+            # Draw extra-cellular space.
+            zPoly = zPlanePolys[zi]
+            coords = zPoly.exterior.coords.xy
+            x = list(coords[0])
+            y = list(coords[1])
+            plt.plot(x, y, color = 'black')
+
+            # Draw barcode locations.
+            mask = (codeZ == zi)
+            plt.scatter(codeX[mask], codeY[mask], marker = 'x')
+            
+            ax = plt.gca()
+            ax.set_aspect('equal', 'datalim')
+            
+            plt.title("z plane {0:d}".format(zi))
+            plt.xlabel("pixels")
+            plt.ylabel("pixels")
+
+            fname = "z_{0:d}.pdf".format(zi)
+            fig.savefig(os.path.join(self.get_path(), fname),
+                        format='pdf',
+                        dpi=100)
+
+            plt.close()
