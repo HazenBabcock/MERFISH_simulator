@@ -12,6 +12,10 @@ import shapely.geometry
 import mersim.base as base
 
 
+class BarcodeImage(base.ImageBase):
+    pass
+
+
 class BarcodeIntensityGaussian(base.SimulationBase):
     """
     Barcodes with a Gaussian intensity distribution.

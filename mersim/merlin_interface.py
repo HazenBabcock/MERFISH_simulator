@@ -5,6 +5,7 @@ Classes that use and/or depend on MERlin.
 import csv
 import json
 import os
+import numpy as np
 import pandas
 
 import merlin
@@ -106,6 +107,50 @@ class DataOrganization(merlin_do.DataOrganization):
                          'imageRegExp', 'fiducialImageType', 'fiducialRegExp']
         self.data[stringColumns] = self.data[stringColumns].astype('str')
 
+    def get_frame_description(self, iRound, fi):
+        """
+        Return description of what a particular frame contains.
+        """
+        df = self.data.loc[self.data['imagingRound'] == iRound]
+
+        # Check if it's a fiducial.
+        if (fi == df['fiducialFrame'].iloc[0]):
+            color = df['fiducialColor'].iloc[0]
+            return ['fiducial', color]
+
+        # Look for fi in 'frame' field.
+        allZ = self.get_z_positions()
+        for index, row in df.iterrows():
+            if fi in row['frame']:
+                zi = np.where(row['frame'] == fi)[0][0]
+                zPos = row['zPos'][zi]
+                zV = np.where(allZ == zPos)[0][0]
+                return [row['channelName'], row['color'], zV, zPos]
+
+        return ["blank"]
+                        
+    def get_imaging_rounds(self):
+        """
+        Return the imaging rounds in this simulation.
+        """
+        return sorted(np.unique(self.data['imagingRound'].to_numpy()))
+
+    def get_image_type(self, iRound):
+        """
+        Return 'imageType'.
+        """
+        df = self.data.loc[self.data['imagingRound'] == iRound]
+        return df['imageType'].iloc[0]
+        
+    def get_number_frames(self, iRound):
+        """
+        Return the number of frames in this imaging round.
+        """
+        df = self.data.loc[self.data['imagingRound'] == iRound]
+        max_frame = np.amax([y for x in df['frame'] for y in x])
+        fiducial = df['fiducialFrame'].iloc[0]
+        return max(max_frame, fiducial) + 1
+
 
 class Positions(object):
     """
@@ -116,14 +161,19 @@ class Positions(object):
             filePath = os.sep.join(
                 [merlin.POSITION_HOME, filePath])
 
+        self.umToPix = umToPix
+
         self.data = pandas.read_csv(filePath,
                                     names = ["x", "y"])
 
-        self.data = self.data * umToPix
+        self.data = self.data * self.umToPix
 
     def get_fov_xy(self, fov):
         return self.data.loc[fov,:].values.tolist()
-        
+
+    def get_fov_xy_um(self, fov):
+        return [x/self.umToPix for x in self.data.loc[fov,:].values.tolist()]
+
     def get_number_positions(self):
         return self.data.shape[0]
     

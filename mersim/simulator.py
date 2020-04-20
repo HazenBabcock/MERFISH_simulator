@@ -10,6 +10,7 @@ import shapely.geometry
 
 import mersim
 import mersim.merlin_interface as mint
+import mersim.movie as movie
 
 
 class SimulationParameters(object):
@@ -56,6 +57,9 @@ class SimulationParameters(object):
 
     def get_fov_xy(self, fov):
         return self._positions.get_fov_xy(fov)
+
+    def get_fov_xy_um(self, fov):
+        return self._positions.get_fov_xy_um(fov)
 
     def get_imaging_rounds(self):
         return self._dataOrganization.get_imaging_rounds()
@@ -115,13 +119,13 @@ def simulate(config, simParams, dataPath):
     #
     
     # Layout sample.
-    config["layout_sample"].run_task(config, simParams)
+#    config["layout_sample"].run_task(config, simParams)
 
     # Layout barcodes.
-    config["layout_barcodes"].run_task(config, simParams)
+#    config["layout_barcodes"].run_task(config, simParams)
 
     # Barcode intensities.
-    config["barcode_intensity"].run_task(config, simParams)
+#    config["barcode_intensity"].run_task(config, simParams)
 
     # Layout fiducials.
 #    config["layout_fiducials"].run_task(config, simParams)
@@ -129,18 +133,21 @@ def simulate(config, simParams, dataPath):
     # Fiducial intensities.
 #    config["fiducial_intensity"].run_task(config, simParams)
 
-    
+
     # Simulated movie creation.
     #
     
     # Iterate over positions.
-#    for fov in range(simParams.get_number_positions()):
+    print()
+    for fov in range(simParams.get_number_positions()):
+        print("Making images for FOV", fov)
 
         # Iterate over imaging round.
-#        for iRound in simParams.get_imaging_rounds():
+        for iRound in simParams.get_imaging_rounds():
+            movie.createMovie(config, simParams, dataPath, fov, iRound)
 
-#            createMovie(config, simParams, fov, iRound)
-   
+#        break
+
 
 if (__name__ == "__main__"):
 

@@ -2,11 +2,12 @@
 """
 Simulation base task.
 """
+import numpy as np
 import os
 import pickle
 
 
-class SimulationBase(object):
+class Base(object):
 
     def __init__(self,
                  dataPath = None,
@@ -21,6 +22,23 @@ class SimulationBase(object):
 
         self._filePath = os.path.join(dataPath, taskName)
 
+
+class ImageBase(Base):
+    """
+    Base class for image creation.
+    """
+    def make_image(self, config, simParams, fov, iRound, desc):
+        imageSize = simParams.get_microscope().get_image_dimensions()
+        return np.zeros(imageSize, dtype = np.float)
+
+
+class SimulationBase(Base):
+    """
+    Base class for laying out different aspects of the simulation.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+        
         if not os.path.exists(self._filePath):
             os.mkdir(self._filePath)
 
