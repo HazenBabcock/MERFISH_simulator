@@ -45,7 +45,6 @@ class BarcodeIntensityGaussian(base.SimulationBase):
         for fov in range(simParams.get_number_positions()):
             fovRect = simParams.get_fov_rect(fov)
             ox, oy = simParams.get_fov_origin(fov)
-            print(ox, oy)
 
             for zi in range(simParams.get_number_z()):
                 
@@ -113,49 +112,46 @@ class BarcodeLocationsUniform(base.SimulationBase):
             zPlaneBounds.append(pUnion.bounds)
             zPlanePolys.append(pUnion)
 
-        # Calculate area.
-        totalArea = 0.0
-        zPlaneAreas = np.zeros(len(zPlanePolys))
+        # Calculate number of bar codes in each z plane.
+        umPerPix = simParams.get_microscope().get_microns_per_pixel()
+        density = self._parameters["density"] * umPerPix * umPerPix
+
+        totalPnts = 0
+        zPlaneCounts = np.zeros(len(zPlanePolys), dtype = np.int)
         for i, elt in enumerate(zPlanePolys):
-            totalArea += elt.area
-            zPlaneAreas[i] = elt.area
+            totalPnts += int(elt.area * density)
+            zPlaneCounts[i] = int(elt.area * density)
 
-        pZ = zPlaneAreas/totalArea
+        # Barcodes randomly positioned in the polygons in each z-plane.
+        nPts = int
 
-        # Barcodes randomly positioned in the polygons across z-planes.
-        #
-        # FIXME: Should do by z plane, as I don't think it is correctly
-        #        Choosing in it's current form.
-        #
-        nPts = int(self._parameters["density"] * totalArea)
+        codeX = np.zeros(totalPnts)
+        codeY = np.zeros(totalPnts)
+        codeZ = np.zeros(totalPnts, dtype = np.int)
+        codeID = np.zeros(totalPnts, dtype = np.int)
 
-        codeX = np.zeros(nPts)
-        codeY = np.zeros(nPts)
-        codeZ = np.zeros(nPts, dtype = np.int)
-        codeID = np.zeros(nPts, dtype = np.int)
+        npts = 0
+        for zv in range(nZ):
+            cnt = 0
+            print("  creating {0:d} localizations for z plane {1:d}".format(zPlaneCounts[zv], zv))
 
-        cnt = 0
-        while(cnt < nPts):
-            if ((cnt % 10000) == 0):
-                print("  ", cnt, nPts)
-
-            # Choose random Z plane.
-            zv = np.random.choice(nZ, p = pZ)
-
-            # Choose random XY.
             minx, miny, maxx, maxy = zPlaneBounds[zv]
             poly = zPlanePolys[zv]
+            
+            while(cnt < zPlaneCounts[zv]):
 
-            pnt = shapely.geometry.Point(np.random.uniform(minx, maxx),
-                                         np.random.uniform(miny, maxy))
+                # Choose random XY.
+                pnt = shapely.geometry.Point(np.random.uniform(minx, maxx),
+                                             np.random.uniform(miny, maxy))
 
-            if poly.contains(pnt):
-                codeX[cnt] = pnt.x
-                codeY[cnt] = pnt.y
-                codeZ[cnt] = zv
-                codeID[cnt] = np.random.choice(nBarcodes)
-                
-                cnt += 1
+                if poly.contains(pnt):
+                    codeX[npts] = pnt.x
+                    codeY[npts] = pnt.y
+                    codeZ[npts] = zv
+                    codeID[npts] = np.random.choice(nBarcodes)
+                    npts += 1
+                    cnt += 1
+        print()
 
         # Save barcodes. The 'barcode_intensity' task will use this to
         # create barcode information for each field.

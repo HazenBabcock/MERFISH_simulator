@@ -43,6 +43,7 @@ class SimulationBase(object):
         return a_object
 
     def run_task(self, config, simParams):
+        print()
         print("Running:", self._taskName)
 
     def save_data(self, a_object, fov = None, zi = None):

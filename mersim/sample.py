@@ -44,7 +44,7 @@ class SampleUniform(base.SimulationBase):
         """
         super().run_task(config, simParams)
 
-        fovSize = simParams.get_microscope().get_image_dimensions() 
+        fovSize = simParams.get_microscope().get_image_dimensions()
         umPerPix = simParams.get_microscope().get_microns_per_pixel()
         
         sx = -0.5*fovSize[0] + self._parameters["margin"]/umPerPix
