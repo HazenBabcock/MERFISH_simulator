@@ -16,55 +16,76 @@ class BarcodeIntensityGaussian(base.SimulationBase):
     """
     Barcodes with a Gaussian intensity distribution.
     """
-    def intensity(self, config, simParams):
+    def run_task(self, config, simParams):
 
         # Load barcode positions.
-        [code_x, code_y, code_z, code_id] = config["layout_barcodes"].load_data()
+        [codeX, codeY, codeZ, codeId] = config["layout_barcodes"].load_data()
 
         # Get barcode information.
         barcodes = simParams.get_codebook().get_barcodes()
 
         # Random intensity information.
-        code_int = numpy.zeros((code_x.size, barcodes.shape[1]))
-        for i in range(code_x.size):
-            b_int = numpy.random.normal(self.parameters["intensity_mean"],
-                                        self.parameters["intensity_sigma"],
-                                        barcodes.shape[1])
-            d_mask = numpy.random.uniform(size = barcodes.shape[1])
-            d_mask[(d_mask < self.parameters["dropout_rate"])] = 0.0
-            d_mask[(d_mask >= self.parameters["dropout_rate"])] = 1.0
+        codeInt = np.zeros((codeX.size, barcodes.shape[1]))
+        for i in range(codeX.size):
+            bInt = np.random.normal(self._parameters["intensity_mean"],
+                                    self._parameters["intensity_sigma"],
+                                    barcodes.shape[1])
+            dMask = np.random.uniform(size = barcodes.shape[1])
+            dMask[(dMask < self._parameters["dropout_rate"])] = 0.0
+            dMask[(dMask >= self._parameters["dropout_rate"])] = 1.0
 
-            code_int[i,:] = b_int * d_mask
+            codeInt[i,:] = bInt * dMask
 
         # Save by position, by z for each position. We include the
         # barcode ID to make it easier to compare MERlin results to
         # ground truth.
         #
+        fovSize = simParams.get_microscope().get_image_dimensions()
+
         for fov in range(simParams.get_number_positions()):
-            fovRect = simParams.get_fov_rect(fov, simParams)
-            ox, oy = simParams.get_fov_origin(fov, simParams)
+            fovRect = simParams.get_fov_rect(fov)
+            ox, oy = simParams.get_fov_origin(fov)
+            print(ox, oy)
 
             for zi in range(simParams.get_number_z()):
                 
-                tmp_x = []
-                tmp_y = []
-                tmp_id = []
-                tmp_int = []
-                for j in range(code_x.size):
-                    if (code_z[j] == zi):
-                        pnt = shapely.geometry.point(code_x[j], code_y[j])
-                        if fov_rect.contains(pnt):
-                            tmp_x.append(code_x[j] - ox)
-                            tmp_y.append(code_y[j] - oy)
-                            tmp_id.append(code_id[j])
-                            tmp_int.append(code_int[j,:])
+                tmpX = []
+                tmpY = []
+                tmpId = []
+                tmpInt = []
+                for j in range(codeX.size):
+                    if (codeZ[j] == zi):
+                        pnt = shapely.geometry.Point(codeX[j], codeY[j])
+                        if fovRect.contains(pnt):
+                            tmpX.append(codeX[j] - ox)
+                            tmpY.append(codeY[j] - oy)
+                            tmpId.append(codeId[j])
+                            tmpInt.append(codeInt[j,:])
 
-                tmp_x = numpy.array(tmp_x)
-                tmp_y = numpy.array(tmp_y)
-                tmp_id = numpy.array(tmp_id)
-                tmp_int = numpy.array(tmp_int)
+                tmpX = np.array(tmpX)
+                tmpY = np.array(tmpY)
+                tmpId = np.array(tmpId)
+                tmpInt = np.array(tmpInt)
 
-            self.save_data([tmp_x, tmp_y, tmp_id, tmp_int], fov)
+                self.save_data([tmpX, tmpY, tmpId, tmpInt], fov, zi)
+
+                # Make plots.
+                fig = plt.figure(figsize = (8,8))
+
+                plt.scatter(tmpX, tmpY, marker = 'x')
+                plt.xlim(0, fovSize[0])
+                plt.ylim(0, fovSize[1])
+
+                plt.title("fov {0:d}, z {1:d}".format(fov, zi))
+                plt.xlabel("pixels")
+                plt.ylabel("pixels")
+
+                fname = "fov_{0:d}_{1:d}.pdf".format(fov, zi)
+                fig.savefig(os.path.join(self.get_path(), fname),
+                            format='pdf',
+                            dpi=100)
+                
+                plt.close()
 
     
 class BarcodeLocationsUniform(base.SimulationBase):

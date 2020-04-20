@@ -36,14 +36,19 @@ class SimulationParameters(object):
     def get_data_organization(self):
         return self._dataOrganization
 
+    def get_fov_origin(self, fov):
+        [px, py] = self.get_fov_xy(fov)
+        fovSize = self._microscope.get_image_dimensions()
+        sx = 0.5*fovSize[0]
+        sy = 0.5*fovSize[1]        
+        return [px - sx, py - sy]
+        
     def get_fov_rect(self, fov):
         [px, py] = self.get_fov_xy(fov)
         fovSize = self._microscope.get_image_dimensions()
-        sx = -0.5*fovSize[0]
-        sy = -0.5*fovSize[1]
-        ex = sx + fovSize[0]
-        ey = sx + fovSize[0]
-        
+        sx = 0.5*fovSize[0]
+        sy = 0.5*fovSize[1]
+
         return shapely.geometry.Polygon([[px - sx, py - sy],
                                          [px - sx, py + sy],
                                          [px + sx, py + sy],
@@ -116,7 +121,7 @@ def simulate(config, simParams, dataPath):
     config["layout_barcodes"].run_task(config, simParams)
 
     # Barcode intensities.
-#    config["barcode_intensity"].run_task(config, simParams)
+    config["barcode_intensity"].run_task(config, simParams)
 
     # Layout fiducials.
 #    config["layout_fiducials"].run_task(config, simParams)
@@ -150,8 +155,3 @@ if (__name__ == "__main__"):
                                      positions = args.positions)
 
     simulate(config, simParams, dataPath)
-
-
-
-        
-
