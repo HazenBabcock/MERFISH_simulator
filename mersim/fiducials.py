@@ -8,6 +8,7 @@ import numpy as np
 import os
 import shapely
 import shapely.geometry
+import shapely.ops
 
 import mersim.base as base
 import mersim.util as util
@@ -133,8 +134,8 @@ class FiducialLocationsUniform(base.SimulationBase):
 
         minx, miny, maxx, maxy = fovUnion.bounds
         cnt = 0
+        print("  creating {0:d} fiducials".format(totalPnts))
         while(cnt < totalPnts):
-            print("  creating {0:d} fiducials".format(totalPnts))
 
             # Choose random XY.
             pnt = shapely.geometry.Point(np.random.uniform(minx, maxx),
@@ -162,10 +163,16 @@ class FiducialLocationsUniform(base.SimulationBase):
             plt.plot(x, y, color = 'gray')
 
         # Draw fiducial bounding polygon.
-        coords = fovUnion.exterior.coords.xy
-        x = list(coords[0])
-        y = list(coords[1])
-        plt.plot(x, y, color = 'black')
+        if isinstance(fovUnion, shapely.geometry.MultiPolygon):
+            tmp = fovUnion
+        else:
+            tmp = [fovUnion]
+
+        for poly in tmp:
+            coords = poly.exterior.coords.xy
+            x = list(coords[0])
+            y = list(coords[1])
+            plt.plot(x, y, color = 'black')
             
         # Draw fiducials.
         plt.scatter(fidX, fidY, marker = 'x')

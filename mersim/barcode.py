@@ -213,10 +213,16 @@ class BarcodeLocationsUniform(base.SimulationBase):
 
             # Draw extra-cellular space.
             zPoly = zPlanePolys[zi]
-            coords = zPoly.exterior.coords.xy
-            x = list(coords[0])
-            y = list(coords[1])
-            plt.plot(x, y, color = 'black')
+            if isinstance(zPoly, shapely.geometry.MultiPolygon):
+                tmp = zPoly
+            else:
+                tmp = [zPoly]
+
+            for poly in tmp:
+                coords = poly.exterior.coords.xy
+                x = list(coords[0])
+                y = list(coords[1])
+                plt.plot(x, y, color = 'black')
 
             # Draw barcode locations.
             mask = ((codeZ/deltaZ).astype(np.int) == zi)
