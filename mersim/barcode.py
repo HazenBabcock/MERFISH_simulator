@@ -67,7 +67,7 @@ class BarcodeIntensityGaussian(base.SimulationBase):
             dMask[(dMask < self._parameters["dropout_rate"])] = 0.0
             dMask[(dMask >= self._parameters["dropout_rate"])] = 1.0
 
-            codeInt[i,:] = bInt * dMask
+            codeInt[i,:] = bInt * dMask * barcodes[codeId[i],:]
 
         # Add intensity information, save by position. We include the
         # barcode ID to make it easier to compare MERlin results to

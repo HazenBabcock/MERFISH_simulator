@@ -122,19 +122,19 @@ def simulate(config, simParams, dataPath):
     #
     
     # Layout sample.
-#    config["layout_sample"].run_task(config, simParams)
+    config["layout_sample"].run_task(config, simParams)
 
     # Layout barcodes.
-#    config["layout_barcodes"].run_task(config, simParams)
+    config["layout_barcodes"].run_task(config, simParams)
 
     # Barcode intensities.
-#    config["barcode_intensity"].run_task(config, simParams)
+    config["barcode_intensity"].run_task(config, simParams)
 
     # Layout fiducials.
-#    config["layout_fiducials"].run_task(config, simParams)
+    config["layout_fiducials"].run_task(config, simParams)
 
     # Fiducial intensities.
-#    config["fiducial_intensity"].run_task(config, simParams)
+    config["fiducial_intensity"].run_task(config, simParams)
 
 
     # Simulated movie creation.
