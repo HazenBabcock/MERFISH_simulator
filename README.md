@@ -10,7 +10,7 @@ A simulator for generating MERFISH data.
 
 ## Usage
 
-This requires an existing MERlin `merfish-parameters` directory.
+This requires an existing MERlin `merfish-parameters` directory. Sample simulation parameter and position files are in the `examples` directory.
 
 1. Create a sub-directory in `merfish-parameters` called `simulation`
 and put the your simulation parameters json file in this directory.
