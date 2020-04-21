@@ -2,7 +2,7 @@
 
 A simulator for generating MERFISH data.
 
-**warning** Alpha version, may change rapidly and unpredictably.
+**Warning:** Alpha version, may change rapidly and unpredictably.
 
 ## Dependencies
 
