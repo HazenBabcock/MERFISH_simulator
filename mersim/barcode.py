@@ -37,7 +37,7 @@ class BarcodeImage(base.ImageBase):
             if (codeInt[i,bitNum] > 0.0):
                 [x, y, psfImage] = psf.get_psf(codeX[i], codeY[i], codeZ[i], zPos, color)
 
-                # If the PSF is to dim to be relevant psfImage will be none.
+                # If the PSF is to dim too be relevant psfImage will be None.
                 if psfImage is not None:
                     psfImage = psfImage * codeInt[i, bitNum]
                     util.add_images(image, psfImage, x, y)
@@ -172,7 +172,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
         npts = 0
         for zv in range(nZ):
             cnt = 0
-            print("  creating {0:d} localizations for z plane {1:d}".format(zPlaneCounts[zv], zv))
+            print("  creating {0:d} barcodes for z plane {1:d}".format(zPlaneCounts[zv], zv))
 
             minx, miny, maxx, maxy = zPlaneBounds[zv]
             poly = zPlanePolys[zv]
