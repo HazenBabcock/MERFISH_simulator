@@ -22,6 +22,9 @@ class Base(object):
 
         self._filePath = os.path.join(dataPath, taskName)
 
+    def get_path(self):
+        return self._filePath
+
 
 class ImageBase(Base):
     """
@@ -39,8 +42,8 @@ class SimulationBase(Base):
     def __init__(self, **kwds):
         super().__init__(**kwds)
         
-        if not os.path.exists(self._filePath):
-            os.mkdir(self._filePath)
+        if not os.path.exists(self.get_path()):
+            os.mkdir(self.get_path())
 
     def get_fov_name(self, fov, zi):
         if fov is None:
@@ -51,9 +54,6 @@ class SimulationBase(Base):
             else:
                 return "fov_{0:d}_{1:d}.bin".format(fov, zi)
 
-    def get_path(self):
-        return self._filePath
-        
     def load_data(self, fov = None, zi = None):
         fname = os.path.join(self._filePath, self.get_fov_name(fov, zi))
         with open(fname, "rb") as fp:
@@ -65,6 +65,6 @@ class SimulationBase(Base):
         print("Running:", self._taskName)
 
     def save_data(self, a_object, fov = None, zi = None):
-        fname = os.path.join(self._filePath, self.get_fov_name(fov, zi))
+        fname = os.path.join(self.get_path(), self.get_fov_name(fov, zi))
         with open(fname, "wb") as fp:
             pickle.dump(a_object, fp)

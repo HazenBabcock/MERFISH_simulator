@@ -31,9 +31,10 @@ def createMovie(config, simParams, dataPath, fov, iRound):
                                                        iRound,
                                                        desc))
 
-    # Convolve with PSF.
-    stack = images
-
+    # Process with camera.
+    stack = []
+    for elt in images:
+        stack.append(config["camera"].camera_image(elt))
 
     # Save.
     #

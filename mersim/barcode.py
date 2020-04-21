@@ -10,10 +10,39 @@ import shapely
 import shapely.geometry
 
 import mersim.base as base
+import mersim.util as util
 
 
 class BarcodeImage(base.ImageBase):
-    pass
+    """
+    Make barcode images.
+    """
+    def make_image(self, config, simParams, fov, iRound, desc):
+        image = super().make_image(config, simParams, fov, iRound, desc)
+        psf = config["microscope_psf"]
+
+        # Figure out which bit this is an image of.
+        bitNum = int(desc[0][3:])-1
+        color = str(desc[1])
+        zPos = float(desc[3])
+
+        # Initialize PSF.
+        psf.initialize(config, simParams, color)
+
+        # Load barcode data.
+        [codeX, codeY, codeZ, codeId, codeInt] = config["barcode_intensity"].load_data(fov)
+
+        # Draw PSFs for barcodes that are 'on' for this bit.
+        for i in range(codeX.size):
+            if (codeInt[i,bitNum] > 0.0):
+                [x, y, psfImage] = psf.get_psf(codeX[i], codeY[i], codeZ[i], zPos, color)
+
+                # If the PSF is to dim to be relevant psfImage will be none.
+                if psfImage is not None:
+                    psfImage = psfImage * codeInt[i, bitNum]
+                    util.add_images(image, psfImage, x, y)
+
+        return image
 
 
 class BarcodeIntensityGaussian(base.SimulationBase):
@@ -40,7 +69,7 @@ class BarcodeIntensityGaussian(base.SimulationBase):
 
             codeInt[i,:] = bInt * dMask
 
-        # Save by position, by z for each position. We include the
+        # Add intensity information, save by position. We include the
         # barcode ID to make it easier to compare MERlin results to
         # ground truth.
         #
@@ -50,45 +79,45 @@ class BarcodeIntensityGaussian(base.SimulationBase):
             fovRect = simParams.get_fov_rect(fov)
             ox, oy = simParams.get_fov_origin(fov)
 
-            for zi in range(simParams.get_number_z()):
-                
-                tmpX = []
-                tmpY = []
-                tmpId = []
-                tmpInt = []
-                for j in range(codeX.size):
-                    if (codeZ[j] == zi):
-                        pnt = shapely.geometry.Point(codeX[j], codeY[j])
-                        if fovRect.contains(pnt):
-                            tmpX.append(codeX[j] - ox)
-                            tmpY.append(codeY[j] - oy)
-                            tmpId.append(codeId[j])
-                            tmpInt.append(codeInt[j,:])
+            tmpX = []
+            tmpY = []
+            tmpZ = []
+            tmpId = []
+            tmpInt = []
+            for j in range(codeX.size):
+                pnt = shapely.geometry.Point(codeX[j], codeY[j])
+                if fovRect.contains(pnt):
+                    tmpX.append(codeX[j] - ox)
+                    tmpY.append(codeY[j] - oy)
+                    tmpZ.append(codeZ[j])
+                    tmpId.append(codeId[j])
+                    tmpInt.append(codeInt[j,:])
 
-                tmpX = np.array(tmpX)
-                tmpY = np.array(tmpY)
-                tmpId = np.array(tmpId)
-                tmpInt = np.array(tmpInt)
+            tmpX = np.array(tmpX)
+            tmpY = np.array(tmpY)
+            tmpZ = np.array(tmpZ)
+            tmpId = np.array(tmpId)
+            tmpInt = np.array(tmpInt)
 
-                self.save_data([tmpX, tmpY, tmpId, tmpInt], fov, zi)
+            self.save_data([tmpX, tmpY, tmpZ, tmpId, tmpInt], fov)
 
-                # Make plots.
-                fig = plt.figure(figsize = (8,8))
+            # Make plots.
+            fig = plt.figure(figsize = (8,8))
 
-                plt.scatter(tmpX, tmpY, marker = 'x')
-                plt.xlim(0, fovSize[0])
-                plt.ylim(0, fovSize[1])
+            plt.scatter(tmpX, tmpY, marker = 'x')
+            plt.xlim(0, fovSize[0])
+            plt.ylim(0, fovSize[1])
 
-                plt.title("fov {0:d}, z {1:d}".format(fov, zi))
-                plt.xlabel("pixels")
-                plt.ylabel("pixels")
-
-                fname = "fov_{0:d}_{1:d}.pdf".format(fov, zi)
-                fig.savefig(os.path.join(self.get_path(), fname),
-                            format='pdf',
-                            dpi=100)
-                
-                plt.close()
+            plt.title("fov {0:d}".format(fov))
+            plt.xlabel("pixels")
+            plt.ylabel("pixels")
+            
+            fname = "fov_{0:d}.pdf".format(fov)
+            fig.savefig(os.path.join(self.get_path(), fname),
+                        format='pdf',
+                        dpi=100)
+            
+            plt.close()
 
     
 class BarcodeLocationsUniform(base.SimulationBase):
@@ -103,6 +132,12 @@ class BarcodeLocationsUniform(base.SimulationBase):
         
         nBarcodes = simParams.get_number_barcodes()
         nZ = simParams.get_number_z()
+        zPos = simParams.get_z_positions()
+
+        # We assume that the z positions are equally spaced.
+        deltaZ = 0.0
+        if (len(zPos) > 1):
+            deltaZ = zPos[1] - zPos[0]
 
         # Load polygons describing sample geometry.
         sampleData = config["layout_sample"].load_data()
@@ -131,7 +166,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
 
         codeX = np.zeros(totalPnts)
         codeY = np.zeros(totalPnts)
-        codeZ = np.zeros(totalPnts, dtype = np.int)
+        codeZ = np.zeros(totalPnts)
         codeID = np.zeros(totalPnts, dtype = np.int)
 
         npts = 0
@@ -151,7 +186,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
                 if poly.contains(pnt):
                     codeX[npts] = pnt.x
                     codeY[npts] = pnt.y
-                    codeZ[npts] = zv
+                    codeZ[npts] = zv*deltaZ + np.random.uniform(0,deltaZ)
                     codeID[npts] = np.random.choice(nBarcodes)
                     npts += 1
                     cnt += 1
@@ -184,7 +219,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
             plt.plot(x, y, color = 'black')
 
             # Draw barcode locations.
-            mask = (codeZ == zi)
+            mask = ((codeZ/deltaZ).astype(np.int) == zi)
             plt.scatter(codeX[mask], codeY[mask], marker = 'x')
             
             ax = plt.gca()

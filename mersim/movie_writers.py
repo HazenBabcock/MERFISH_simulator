@@ -14,7 +14,9 @@ import mersim.base as base
 class ImageWriter(base.Base):
 
     def save_stack(self, filePath, stack, pos):
-        print(pos)
+        """
+        Create the XML file that MERlin will look at to determine the image position.
+        """
         xml_out = ElementTree.Element("settings")
         acquisition_block = ElementTree.SubElement(xml_out, "acquisition")
         stage_position_block = ElementTree.SubElement(acquisition_block, "stage_position")

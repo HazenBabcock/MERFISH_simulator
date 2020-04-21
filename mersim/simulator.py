@@ -79,6 +79,9 @@ class SimulationParameters(object):
     def get_positions(self):
         return self._positions
 
+    def get_z_positions(self):
+        return self._dataOrganization.get_z_positions()
+
 
 def build_parser():
     parser = argparse.ArgumentParser(description='Simulate MERFISH data.')
@@ -140,10 +143,12 @@ def simulate(config, simParams, dataPath):
     # Iterate over positions.
     print()
     for fov in range(simParams.get_number_positions()):
+        print()
         print("Making images for FOV", fov)
 
         # Iterate over imaging round.
         for iRound in simParams.get_imaging_rounds():
+            print("  Imaging round", iRound)
             movie.createMovie(config, simParams, dataPath, fov, iRound)
 
 #        break
