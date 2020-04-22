@@ -108,20 +108,20 @@ class FiducialLocationsUniform(base.SimulationBase):
         fovSize = simParams.get_microscope().get_image_dimensions()
         umPerPix = simParams.get_microscope().get_microns_per_pixel()
         
-        sx = -0.5*fovSize[0] + self._parameters["margin"]/umPerPix
-        sy = -0.5*fovSize[1] + self._parameters["margin"]/umPerPix
-        ex = sx + fovSize[0] - self._parameters["margin"]/umPerPix
-        ey = sy + fovSize[1] - self._parameters["margin"]/umPerPix
+        sx = self._parameters["margin"]/umPerPix
+        sy = self._parameters["margin"]/umPerPix
+        ex = fovSize[0] - self._parameters["margin"]/umPerPix
+        ey = fovSize[1] - self._parameters["margin"]/umPerPix
 
         # Create a polygon for each FOV, adjusted for margin.
         fovPoly = []
         for fov in range(simParams.get_number_positions()):
             [px, py] = simParams.get_fov_xy(fov)
 
-            fovRect = shapely.geometry.Polygon([[px - sx, py - sy],
-                                                [px - sx, py + sy],
-                                                [px + sx, py + sy],
-                                                [px + sx, py - sy]])
+            fovRect = shapely.geometry.Polygon([[px + sx, py + sy],
+                                                [px + sx, py + ey],
+                                                [px + ex, py + ey],
+                                                [px + ex, py + sy]])
             fovPoly.append(fovRect)
 
         # Randomly place fiducials across FOV.

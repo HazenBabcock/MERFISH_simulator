@@ -22,9 +22,9 @@ class BarcodeImage(base.ImageBase):
         psf = config["microscope_psf"]
 
         # Figure out which bit this is an image of.
-        bitNum = int(desc[0][3:])-1
         color = str(desc[1])
-        zPos = float(desc[3])
+        bitNum = int(desc[2]) - 1
+        zPos = float(desc[4])
 
         # Initialize PSF.
         psf.initialize(config, simParams, color)
@@ -195,6 +195,18 @@ class BarcodeLocationsUniform(base.SimulationBase):
         # Save barcodes. The 'barcode_intensity' task will use this to
         # create barcode information for each field.
         self.save_data([codeX, codeY, codeZ, codeID])
+
+        # Save a text version for easier MERlin comparison.
+        #
+        cellIndex = np.zeros(codeX.size, dtype = np.int) - 1
+        with open(os.path.join(self.get_path(), "barcodes.csv"), "w") as fp:
+            fp.write(",".join(["barcode_id", "global_x", "global_y", "cell_index"]) + "\n")
+            np.savetxt(fp,
+                       np.column_stack([codeID,
+                                        codeX * umPerPix,
+                                        codeY * umPerPix,
+                                        cellIndex]),
+                       fmt = "%d,%.2f,%.2f,%d")
 
         # Reference images.
         allFOV = []

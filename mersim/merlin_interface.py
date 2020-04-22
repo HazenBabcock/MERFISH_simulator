@@ -125,7 +125,7 @@ class DataOrganization(merlin_do.DataOrganization):
                 zi = np.where(row['frame'] == fi)[0][0]
                 zPos = row['zPos'][zi]
                 zV = np.where(allZ == zPos)[0][0]
-                return [row['channelName'], row['color'], zV, zPos]
+                return [row['channelName'], row['color'], row['bitNumber'], zV, zPos]
 
         return ["blank"]
                         

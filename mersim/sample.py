@@ -47,10 +47,10 @@ class SampleUniform(base.SimulationBase):
         fovSize = simParams.get_microscope().get_image_dimensions()
         umPerPix = simParams.get_microscope().get_microns_per_pixel()
         
-        sx = -0.5*fovSize[0] + self._parameters["margin"]/umPerPix
-        sy = -0.5*fovSize[1] + self._parameters["margin"]/umPerPix
-        ex = sx + fovSize[0] - self._parameters["margin"]/umPerPix
-        ey = sy + fovSize[1] - self._parameters["margin"]/umPerPix
+        sx = self._parameters["margin"]/umPerPix
+        sy = self._parameters["margin"]/umPerPix
+        ex = fovSize[0] - self._parameters["margin"]/umPerPix
+        ey = fovSize[1] - self._parameters["margin"]/umPerPix
 
         # Create save polygons.
         allPoly = []
@@ -60,10 +60,10 @@ class SampleUniform(base.SimulationBase):
             for fov in range(simParams.get_number_positions()):
                 [px, py] = simParams.get_fov_xy(fov)
 
-                exRect = shapely.geometry.Polygon([[px - sx, py - sy],
-                                                   [px - sx, py + sy],
-                                                   [px + sx, py + sy],
-                                                   [px + sx, py - sy]])
+                exRect = shapely.geometry.Polygon([[px + sx, py + sy],
+                                                   [px + sx, py + ey],
+                                                   [px + ex, py + ey],
+                                                   [px + ex, py + sy]])
                 tmp.append(exRect)
 
             allPoly.append(tmp)

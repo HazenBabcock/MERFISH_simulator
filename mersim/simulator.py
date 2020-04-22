@@ -40,20 +40,18 @@ class SimulationParameters(object):
     def get_fov_origin(self, fov):
         [px, py] = self.get_fov_xy(fov)
         fovSize = self._microscope.get_image_dimensions()
-        sx = 0.5*fovSize[0]
-        sy = 0.5*fovSize[1]        
-        return [px - sx, py - sy]
+        return [px, py]
         
     def get_fov_rect(self, fov):
         [px, py] = self.get_fov_xy(fov)
         fovSize = self._microscope.get_image_dimensions()
-        sx = 0.5*fovSize[0]
-        sy = 0.5*fovSize[1]
+        sizeX = fovSize[0]
+        sizeY = fovSize[1]
 
-        return shapely.geometry.Polygon([[px - sx, py - sy],
-                                         [px - sx, py + sy],
-                                         [px + sx, py + sy],
-                                         [px + sx, py - sy]])
+        return shapely.geometry.Polygon([[px, py],
+                                         [px, py + sizeY],
+                                         [px + sizeX, py + sizeY],
+                                         [px + sizeX, py]])
 
     def get_fov_xy(self, fov):
         return self._positions.get_fov_xy(fov)
