@@ -45,6 +45,16 @@ class BarcodeImage(base.ImageBase):
         return image
 
 
+class BarcodeImageUniformBackground(BarcodeImage):
+    """
+    Make barcode images with a uniform background.
+    """
+    def make_image(self, config, simParams, fov, iRound, desc):
+        image = super().make_image(config, simParams, fov, iRound, desc)
+        image += self._parameters["background"]
+        return image
+
+
 class BarcodeIntensityGaussian(base.SimulationBase):
     """
     Barcodes with a Gaussian intensity distribution.
@@ -139,6 +149,11 @@ class BarcodeLocationsUniform(base.SimulationBase):
         if (len(zPos) > 1):
             deltaZ = zPos[1] - zPos[0]
 
+        # Check whether barcodes should always be in focus.
+        inFocus = False
+        if "in_focus" in self._parameters:
+            inFocus = self._parameters["in_focus"]
+
         # Load polygons describing sample geometry.
         sampleData = config["layout_sample"].load_data()
         exPolygons = sampleData["extra-cellular"]
@@ -186,7 +201,10 @@ class BarcodeLocationsUniform(base.SimulationBase):
                 if poly.contains(pnt):
                     codeX[npts] = pnt.x
                     codeY[npts] = pnt.y
-                    codeZ[npts] = zv*deltaZ + np.random.uniform(0,deltaZ)
+                    if inFocus:
+                        codeZ[npts] = zv*deltaZ
+                    else:
+                        codeZ[npts] = zv*deltaZ + np.random.uniform(0, deltaZ)
                     codeID[npts] = np.random.choice(nBarcodes)
                     npts += 1
                     cnt += 1

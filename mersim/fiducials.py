@@ -41,6 +41,16 @@ class FiducialImage(base.ImageBase):
         return image
 
 
+class FiducialImageUniformBackground(FiducialImage):
+    """
+    Make fiducial images with a uniform background.
+    """
+    def make_image(self, config, simParams, fov, iRound, desc):
+        image = super().make_image(config, simParams, fov, iRound, desc)    
+        image += self._parameters["background"]
+        return image
+        
+    
 class FiducialIntensityGaussian(base.SimulationBase):
     """
     Fiducials with Gaussian intensity distribution.
