@@ -142,6 +142,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
         super().run_task(config, simParams)
         
         nBarcodes = simParams.get_number_barcodes()
+        print("  {0:d} non blank barcodes found.".format(nBarcodes))
         nZ = simParams.get_number_z()
         zPos = simParams.get_z_positions()
 

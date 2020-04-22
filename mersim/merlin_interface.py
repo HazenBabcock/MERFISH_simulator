@@ -84,6 +84,9 @@ class Codebook(merlin_co.Codebook):
         self._codebookName = codebookName
         self._codebookIndex = codebookIndex
 
+    def get_barcodes(self, ignoreBlanks = True):
+        return super().get_barcodes(ignoreBlanks)
+
 
 class DataOrganization(merlin_do.DataOrganization):
     """
