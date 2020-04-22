@@ -38,4 +38,4 @@ class TiffWriter(ImageWriter):
         with tifffile.TiffWriter(filePath + ".tif") as tf:
             for elt in stack:
                 tmp = np.clip(elt, 0, 2**16-1)
-                tf.save(elt.astype(np.uint16))
+                tf.save(elt.astype(np.uint16).transpose())
