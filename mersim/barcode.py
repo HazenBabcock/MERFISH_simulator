@@ -60,6 +60,7 @@ class BarcodeIntensityGaussian(base.SimulationBase):
     Barcodes with a Gaussian intensity distribution.
     """
     def run_task(self, config, simParams):
+        super().run_task(config, simParams)
 
         # Load barcode positions.
         [codeX, codeY, codeZ, codeId] = config["layout_barcodes"].load_data()

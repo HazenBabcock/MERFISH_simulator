@@ -56,6 +56,7 @@ class FiducialIntensityGaussian(base.SimulationBase):
     Fiducials with Gaussian intensity distribution.
     """
     def run_task(self, config, simParams):
+        super().run_task(config, simParams)
 
         # Load fiducial positions.
         [fidX, fidY] = config["layout_fiducials"].load_data()
