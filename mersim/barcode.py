@@ -37,7 +37,7 @@ class BarcodeImage(base.ImageBase):
             if (codeInt[i,bitNum] > 0.0):
                 [x, y, psfImage] = psf.get_psf(codeX[i], codeY[i], codeZ[i], zPos, color)
 
-                # If the PSF is to dim too be relevant psfImage will be None.
+                # If the PSF is too dim to be relevant psfImage will be None.
                 if psfImage is not None:
                     psfImage = psfImage * codeInt[i, bitNum]
                     util.add_images(image, psfImage, x, y)
