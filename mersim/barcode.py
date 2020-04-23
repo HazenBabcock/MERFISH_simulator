@@ -130,7 +130,7 @@ class BarcodeIntensityGaussian(base.SimulationBase):
             
             plt.close()
 
-    
+
 class BarcodeLocationsUniform(base.SimulationBase):
     """
     Uniform array of barcodes (in extra-cellular space).

@@ -7,6 +7,7 @@ A simulator for generating MERFISH data.
 ## Dependencies
 
 * [MERlin](https://github.com/ZhuangLab/MERlin)
+* [MicroscPSF-Py](https://github.com/MicroscPSF/MicroscPSF-Py)
 
 ## Usage
 

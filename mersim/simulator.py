@@ -153,8 +153,6 @@ def simulate(config, simParams, dataPath):
             print("  Imaging round", iRound)
             movie.createMovie(config, simParams, dataPath, fov, iRound)
 
-#        break
-
 
 if (__name__ == "__main__"):
 
