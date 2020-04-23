@@ -119,21 +119,25 @@ def simulate(config, simParams, dataPath):
     # Simulation initializations.
     #
     
-    # Layout sample.
-    config["layout_sample"].run_task(config, simParams)
+    # Layout sample, this is done first.
+    #
+    config["sample_layout"].run_task(config, simParams)
 
-    # Layout barcodes.
-    config["layout_barcodes"].run_task(config, simParams)
+    # Other layouts.
+    #
+    # These are simulation tasks that end with 'layout'.
+    #
+    for elt in config:
+        if elt.endswith("layout") and (elt != "sample_layout"):
+            config[elt].run_task(config, simParams)
 
-    # Barcode intensities.
-    config["barcode_intensity"].run_task(config, simParams)
-
-    # Layout fiducials.
-    config["layout_fiducials"].run_task(config, simParams)
-
-    # Fiducial intensities.
-    config["fiducial_intensity"].run_task(config, simParams)
-
+    # Intensity calculations.
+    #
+    # These are simulation tasks that end with 'intensity'.
+    #
+    for elt in config:
+        if elt.endswith("intensity"):
+            config[elt].run_task(config, simParams)
 
     # Simulated movie creation.
     #

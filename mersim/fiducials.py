@@ -18,8 +18,8 @@ class FiducialImage(base.ImageBase):
     """
     Make fiducial images.
     """
-    def make_image(self, config, simParams, fov, iRound, desc):
-        image = super().make_image(config, simParams, fov, iRound, desc)
+    def foreground(self, config, simParams, fov, iRound, desc):
+        image = super().foreground(config, simParams, fov, iRound, desc)
         psf = config["microscope_psf"]
         color = str(desc[1])
 
@@ -45,11 +45,11 @@ class FiducialImageUniformBackground(FiducialImage):
     """
     Make fiducial images with a uniform background.
     """
-    def make_image(self, config, simParams, fov, iRound, desc):
-        image = super().make_image(config, simParams, fov, iRound, desc)    
+    def foreground(self, config, simParams, fov, iRound, desc):
+        image = super().foreground(config, simParams, fov, iRound, desc)    
         image += self._parameters["background"]
         return image
-        
+
     
 class FiducialIntensityGaussian(base.SimulationBase):
     """
@@ -59,7 +59,7 @@ class FiducialIntensityGaussian(base.SimulationBase):
         super().run_task(config, simParams)
 
         # Load fiducial positions.
-        [fidX, fidY] = config["layout_fiducials"].load_data()
+        [fidX, fidY] = config["fiducial_layout"].load_data()
 
         # Random normal intensities.
         fidInt = np.random.normal(self._parameters["intensity_mean"],

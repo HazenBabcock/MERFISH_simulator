@@ -1,12 +1,12 @@
 {
-    "layout_sample" : {
+    "sample_layout" : {
 	"task" : "SampleUniform",
 	"module" : "mersim.sample",
 	"parameters" : {
 	    "margin" : 10.0
 	}
     },
-    "layout_barcodes" : {
+    "barcode_layout" : {
 	"task" : "BarcodeLocationsUniform",
 	"module" : "mersim.barcode",
 	"parameters" : {
@@ -23,7 +23,7 @@
 	    "intensity_sigma" : 30
 	}
     },
-    "layout_fiducials" : {
+    "fiducial_layout" : {
 	"task" : "FiducialLocationsUniform",
 	"module" : "mersim.fiducials",
 	"parameters" : {

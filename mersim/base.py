@@ -30,9 +30,32 @@ class ImageBase(Base):
     """
     Base class for image creation.
     """
-    def make_image(self, config, simParams, fov, iRound, desc):
+    def background(self, config, simParams, fov, iRound, desc):
+        """
+        Create background for an image.
+        """
+        return None
+
+    def foreground(self, config, simParams, fov, iRound, desc):
+        """
+        Create foreground for an image.
+
+        The default behavior is to return image that is all zeros.
+        """
         imageSize = simParams.get_microscope().get_image_dimensions()
         return np.zeros(imageSize, dtype = np.float)
+        
+    def make_image(self, config, simParams, fov, iRound, desc):
+        """
+        Depending desc[0], which is the 'channelName' field call the
+        foreground() or background() method as appropriate.
+        """
+        # Remove any numbers from 'channelName' field.
+        imtype = ''.join([i for i in desc[0] if not i.isdigit()])
+        if self._taskName.startswith(imtype):
+            return self.foreground(config, simParams, fov, iRound, desc)
+        else:
+            return self.background(config, simParams, fov, iRound, desc)
 
 
 class SimulationBase(Base):

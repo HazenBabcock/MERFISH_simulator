@@ -17,8 +17,8 @@ class BarcodeImage(base.ImageBase):
     """
     Make barcode images.
     """
-    def make_image(self, config, simParams, fov, iRound, desc):
-        image = super().make_image(config, simParams, fov, iRound, desc)
+    def foreground(self, config, simParams, fov, iRound, desc):
+        image = super().foreground(config, simParams, fov, iRound, desc)
         psf = config["microscope_psf"]
 
         # Figure out which bit this is an image of.
@@ -49,8 +49,8 @@ class BarcodeImageUniformBackground(BarcodeImage):
     """
     Make barcode images with a uniform background.
     """
-    def make_image(self, config, simParams, fov, iRound, desc):
-        image = super().make_image(config, simParams, fov, iRound, desc)
+    def foreground(self, config, simParams, fov, iRound, desc):
+        image = super().foreground(config, simParams, fov, iRound, desc)
         image += self._parameters["background"]
         return image
 
@@ -63,7 +63,7 @@ class BarcodeIntensityGaussian(base.SimulationBase):
         super().run_task(config, simParams)
 
         # Load barcode positions.
-        [codeX, codeY, codeZ, codeId] = config["layout_barcodes"].load_data()
+        [codeX, codeY, codeZ, codeId] = config["barcode_layout"].load_data()
 
         # Get barcode information.
         barcodes = simParams.get_codebook().get_barcodes()
@@ -157,7 +157,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
             inFocus = self._parameters["in_focus"]
 
         # Load polygons describing sample geometry.
-        sampleData = config["layout_sample"].load_data()
+        sampleData = config["sample_layout"].load_data()
         exPolygons = sampleData["extra-cellular"]
 
         # Create unions for each z plane.

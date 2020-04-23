@@ -13,25 +13,37 @@ def createMovie(config, simParams, dataPath, fov, iRound):
     pos = simParams.get_fov_xy_um(fov)
 
     # Create images for movie.
+    #
+    # This first determines the frame type for each frame in
+    # the movie based on the data organization file. Then it
+    # creates the image using simulation tasks that end in
+    # 'image'. At least one of these much match the 'channelName'
+    # field for this frame in the data organization file.
+    #
     images = []
     for fi in range(do.get_number_frames(iRound)):
         desc = do.get_frame_description(iRound, fi)
 
-        if "bit" in desc[0]:
-            images.append(config["bit_image"].make_image(config,
-                                                         simParams,
-                                                         fov,
-                                                         iRound,
-                                                         desc))
-        else:
-            task_name = desc[0] + "_image"
-            images.append(config[task_name].make_image(config,
-                                                       simParams,
-                                                       fov,
-                                                       iRound,
-                                                       desc))
+        image = None
+        for elt in config:
+            if elt.endswith("image"):
+                tmp = config[elt].make_image(config,
+                                             simParams,
+                                             fov,
+                                             iRound,
+                                             desc)
+                if tmp is not None:
+                    if image is None:
+                        image = tmp
+                    else:
+                        image += tmp
+
+        assert (image is not None), "No image created for " + desc[0] + "!"
+        
+        images.append(image)
 
     # Process with camera.
+    #
     stack = []
     for elt in images:
         stack.append(config["camera"].camera_image(elt))

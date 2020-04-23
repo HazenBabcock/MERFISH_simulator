@@ -1,16 +1,17 @@
 {
-    "layout_sample" : {
+    "sample_layout" : {
 	"task" : "SampleUniform",
 	"module" : "mersim.sample",
 	"parameters" : {
 	    "margin" : 10.0
 	}
     },
-    "layout_barcodes" : {
+    "barcode_layout" : {
 	"task" : "BarcodeLocationsUniform",
 	"module" : "mersim.barcode",
 	"parameters" : {
-	    "density" : 0.01
+	    "density" : 0.01,
+	    "in_focus" : false
 	}
     },
     "barcode_intensity" : {
@@ -19,10 +20,10 @@
 	"parameters" : {
 	    "dropout_rate" : 0.2,
 	    "intensity_mean" : 1000,
-	    "intensity_sigma" : 100
+	    "intensity_sigma" : 30
 	}
     },
-    "layout_fiducials" : {
+    "fiducial_layout" : {
 	"task" : "FiducialLocationsUniform",
 	"module" : "mersim.fiducials",
 	"parameters" : {
@@ -51,12 +52,18 @@
 	"module" : "mersim.cell_stain"
     },
     "fiducial_image" : {
-	"task" : "FiducialImage",
-	"module" : "mersim.fiducials"
+	"task" : "FiducialImageUniformBackground",
+	"module" : "mersim.fiducials",
+	"parameters" : {
+	    "background" : 5
+	}	
     },
     "bit_image" : {
-	"task" : "BarcodeImage",
-	"module" : "mersim.barcode"
+	"task" : "BarcodeImageUniformBackground",
+	"module" : "mersim.barcode",
+	"parameters" : {
+	    "background" : 10
+	}
     },
     "microscope_psf" : {
 	"task" : "GaussianPSF",
