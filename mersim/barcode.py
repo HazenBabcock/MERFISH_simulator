@@ -13,6 +13,34 @@ import mersim.base as base
 import mersim.util as util
 
 
+def concat(list1, list2):
+    if list1[0] is None:
+        return list2
+    else:
+        for i in range(len(list1)):
+            list1[i] = np.concatenate((list1[i], list2[i]))
+        return list1
+
+    
+def random_barcodes(exPolygons, nBarcodes, density, deltaZ, inFocus):
+    """
+    Random barcodes in each z plane.
+    """
+    codeL = [None, None, None, None]
+    for zv, zPlane in enumerate(exPolygons):
+        for poly in zPlane:
+            [tmpX, tmpY] = util.random_points_in_shape(poly, density)
+            tmpZ = zv * deltaZ * np.ones(tmpX.size)
+            if inFocus:
+                tmpZ += np.random.uniform(0, deltaZ, tmpX.size)
+
+            tmpID = np.random.choice(nBarcodes, tmpX.size)
+
+            codeL = concat(codeL, [tmpX, tmpY, tmpZ, tmpID])
+
+    return codeL
+
+
 class BarcodeImage(base.ImageBase):
     """
     Make barcode images.
@@ -133,23 +161,21 @@ class BarcodeIntensityGaussian(base.SimulationBase):
 
 class BarcodeLocationsUniform(base.SimulationBase):
     """
-    Uniform array of barcodes (in extra-cellular space).
+    Uniform array of barcodes.
     """
     def run_task(self, config, simParams):
         """
         This creates random barcodes in extra-cellular space.
         """
         super().run_task(config, simParams)
-        
+
+        umPerPix = simParams.get_microscope().get_microns_per_pixel()
+        density = self._parameters["density"] * umPerPix * umPerPix
+
         nBarcodes = simParams.get_number_barcodes()
         print("  {0:d} non blank barcodes found.".format(nBarcodes))
         nZ = simParams.get_number_z()
-        zPos = simParams.get_z_positions()
-
-        # We assume that the z positions are equally spaced.
-        deltaZ = 0.0
-        if (len(zPos) > 1):
-            deltaZ = zPos[1] - zPos[0]
+        deltaZ = simParams.get_z_delta()
 
         # Check whether barcodes should always be in focus.
         inFocus = False
@@ -158,63 +184,26 @@ class BarcodeLocationsUniform(base.SimulationBase):
 
         # Load polygons describing sample geometry.
         sampleData = config["sample_layout"].load_data()
-        exPolygons = sampleData["extra-cellular"]
 
-        # Create unions for each z plane.
-        zPlaneBounds = []
-        zPlanePolys = []
-        for elt in exPolygons:
-            pUnion = shapely.ops.unary_union(elt)
-            zPlaneBounds.append(pUnion.bounds)
-            zPlanePolys.append(pUnion)
+        codeL = [None, None, None, None]
+        for pType in ['extra-cellular', 'cytoplasm', 'nucleus']:
+            if pType in sampleData:
+                polygons = sampleData[pType]
+        
+                assert (nZ == len(polygons))
 
-        # Calculate number of bar codes in each z plane.
-        umPerPix = simParams.get_microscope().get_microns_per_pixel()
-        density = self._parameters["density"] * umPerPix * umPerPix
-
-        totalPnts = 0
-        zPlaneCounts = np.zeros(len(zPlanePolys), dtype = np.int)
-        for i, elt in enumerate(zPlanePolys):
-            totalPnts += int(elt.area * density)
-            zPlaneCounts[i] = int(elt.area * density)
-
-        # Barcodes randomly positioned in the polygons in each z-plane.
-        nPts = int
-
-        codeX = np.zeros(totalPnts)
-        codeY = np.zeros(totalPnts)
-        codeZ = np.zeros(totalPnts)
-        codeID = np.zeros(totalPnts, dtype = np.int)
-
-        npts = 0
-        for zv in range(nZ):
-            cnt = 0
-            print("  creating {0:d} barcodes for z plane {1:d}".format(zPlaneCounts[zv], zv))
-
-            minx, miny, maxx, maxy = zPlaneBounds[zv]
-            poly = zPlanePolys[zv]
-            
-            while(cnt < zPlaneCounts[zv]):
-
-                # Choose random XY.
-                pnt = shapely.geometry.Point(np.random.uniform(minx, maxx),
-                                             np.random.uniform(miny, maxy))
-
-                if poly.contains(pnt):
-                    codeX[npts] = pnt.x
-                    codeY[npts] = pnt.y
-                    if inFocus:
-                        codeZ[npts] = zv*deltaZ
-                    else:
-                        codeZ[npts] = zv*deltaZ + np.random.uniform(0, deltaZ)
-                    codeID[npts] = np.random.choice(nBarcodes)
-                    npts += 1
-                    cnt += 1
-        print()
-
+                # Random barcodes in each z plane.
+                tmpL = random_barcodes(polygons, nBarcodes, density, deltaZ, inFocus)
+                codeL = concat(codeL, tmpL)
+                    
         # Save barcodes. The 'barcode_intensity' task will use this to
         # create barcode information for each field.
+        #
+        # Note: Array is x, y, z, ID.
+        #
+        [codeX, codeY, codeZ, codeID] = codeL
         self.save_data([codeX, codeY, codeZ, codeID])
+        print("  created {0:d} barcode locations".format(codeX.size))
 
         # Save a text version for easier MERlin comparison.
         #
@@ -243,18 +232,13 @@ class BarcodeLocationsUniform(base.SimulationBase):
                 y = list(coords[1])
                 plt.plot(x, y, color = 'gray')
 
-            # Draw extra-cellular space.
-            zPoly = zPlanePolys[zi]
-            if isinstance(zPoly, shapely.geometry.MultiPolygon):
-                tmp = zPoly
-            else:
-                tmp = [zPoly]
-
-            for poly in tmp:
-                coords = poly.exterior.coords.xy
-                x = list(coords[0])
-                y = list(coords[1])
-                plt.plot(x, y, color = 'black')
+            # Draw sample geometry.
+            for pType in ['extra-cellular', 'cytoplasm', 'nucleus']:
+                if pType in sampleData:
+                    zPolygons = sampleData[pType][zi]
+                    for poly in zPolygons:
+                        coords = poly.exterior.coords.xy
+                        plt.plot(coords[0], coords[1], color = 'black')
 
             # Draw barcode locations.
             mask = ((codeZ/deltaZ).astype(np.int) == zi)

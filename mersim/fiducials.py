@@ -138,25 +138,8 @@ class FiducialLocationsUniform(base.SimulationBase):
         # Randomly place fiducials across FOV.
         fovUnion = shapely.ops.unary_union(fovPoly)
         density = self._parameters["density"] * umPerPix * umPerPix
-        totalPnts = int(fovUnion.area * density)
 
-        fidX = np.zeros(totalPnts)
-        fidY = np.zeros(totalPnts)
-
-        minx, miny, maxx, maxy = fovUnion.bounds
-        cnt = 0
-        print("  creating {0:d} fiducials".format(totalPnts))
-        while(cnt < totalPnts):
-
-            # Choose random XY.
-            pnt = shapely.geometry.Point(np.random.uniform(minx, maxx),
-                                         np.random.uniform(miny, maxy))
-
-            if fovUnion.contains(pnt):
-                fidX[cnt] = pnt.x
-                fidY[cnt] = pnt.y
-                cnt += 1
-
+        [fidX, fidY] = util.random_points_in_shape(fovUnion, density)
         self.save_data([fidX, fidY])
 
         # Reference image.

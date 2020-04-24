@@ -77,6 +77,16 @@ class SimulationParameters(object):
     def get_positions(self):
         return self._positions
 
+    def get_z_delta(self):
+        zPos = self.get_z_positions()
+
+        # We assume that the z positions are equally spaced.
+        deltaZ = 0.0
+        if (len(zPos) > 1):
+            deltaZ = zPos[1] - zPos[0]
+
+        return deltaZ
+
     def get_z_positions(self):
         return self._dataOrganization.get_z_positions()
 
@@ -141,7 +151,7 @@ def simulate(config, simParams, dataPath):
 
     # Simulated movie creation.
     #
-    
+
     # Iterate over positions.
     print()
     for fov in range(simParams.get_number_positions()):
