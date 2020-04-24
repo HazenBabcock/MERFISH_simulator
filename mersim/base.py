@@ -25,6 +25,15 @@ class Base(object):
     def get_path(self):
         return self._filePath
 
+    def get_parameter(self, pname, default = None):
+        if default is None:
+            return self._parameters[pname]
+        else:
+            if pname in self._parameters:
+                return self._parameters[pname]
+            else:
+                return default
+
 
 class ImageBase(Base):
     """

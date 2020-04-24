@@ -73,7 +73,7 @@ class SimulationParameters(object):
 
     def get_number_z(self):
         return len(self._dataOrganization.get_z_positions())
-        
+    
     def get_positions(self):
         return self._positions
 

@@ -13,30 +13,21 @@ import mersim.base as base
 import mersim.util as util
 
 
-def concat(list1, list2):
-    if list1[0] is None:
-        return list2
-    else:
-        for i in range(len(list1)):
-            list1[i] = np.concatenate((list1[i], list2[i]))
-        return list1
-
-    
-def random_barcodes(exPolygons, nBarcodes, density, deltaZ, inFocus):
+def random_barcodes(polygons, nBarcodes, density, deltaZ, inFocus):
     """
     Random barcodes in each z plane.
     """
     codeL = [None, None, None, None]
-    for zv, zPlane in enumerate(exPolygons):
+    for zv, zPlane in enumerate(polygons):
         for poly in zPlane:
             [tmpX, tmpY] = util.random_points_in_shape(poly, density)
             tmpZ = zv * deltaZ * np.ones(tmpX.size)
-            if inFocus:
+            if not inFocus:
                 tmpZ += np.random.uniform(0, deltaZ, tmpX.size)
 
             tmpID = np.random.choice(nBarcodes, tmpX.size)
 
-            codeL = concat(codeL, [tmpX, tmpY, tmpZ, tmpID])
+            codeL = util.concat(codeL, [tmpX, tmpY, tmpZ, tmpID])
 
     return codeL
 
@@ -160,17 +151,15 @@ class BarcodeIntensityGaussian(base.SimulationBase):
 
 
 class BarcodeLocationsUniform(base.SimulationBase):
-    """
-    Uniform array of barcodes.
-    """
+    
     def run_task(self, config, simParams):
         """
-        This creates random barcodes in extra-cellular space.
+        This creates random barcodes.
         """
         super().run_task(config, simParams)
 
         umPerPix = simParams.get_microscope().get_microns_per_pixel()
-        density = self._parameters["density"] * umPerPix * umPerPix
+        density = self.get_parameter("density") * umPerPix * umPerPix
 
         nBarcodes = simParams.get_number_barcodes()
         print("  {0:d} non blank barcodes found.".format(nBarcodes))
@@ -178,9 +167,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
         deltaZ = simParams.get_z_delta()
 
         # Check whether barcodes should always be in focus.
-        inFocus = False
-        if "in_focus" in self._parameters:
-            inFocus = self._parameters["in_focus"]
+        inFocus = self.get_parameter("in_focus", False)
 
         # Load polygons describing sample geometry.
         sampleData = config["sample_layout"].load_data()
@@ -194,8 +181,8 @@ class BarcodeLocationsUniform(base.SimulationBase):
 
                 # Random barcodes in each z plane.
                 tmpL = random_barcodes(polygons, nBarcodes, density, deltaZ, inFocus)
-                codeL = concat(codeL, tmpL)
-                    
+                codeL = util.concat(codeL, tmpL)
+
         # Save barcodes. The 'barcode_intensity' task will use this to
         # create barcode information for each field.
         #
