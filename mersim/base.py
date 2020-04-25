@@ -88,6 +88,9 @@ class SimulationBase(Base):
 
     def load_data(self, fov = None, zi = None):
         fname = os.path.join(self._filePath, self.get_fov_name(fov, zi))
+        if not os.path.exists(fname):
+            return None
+
         with open(fname, "rb") as fp:
             a_object = pickle.load(fp)
         return a_object

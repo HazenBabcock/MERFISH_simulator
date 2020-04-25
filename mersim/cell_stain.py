@@ -54,6 +54,9 @@ class CellStainImage(base.ImageBase):
         zVals = simParams.get_z_positions()
 
         for zi in range(simParams.get_number_z()):
+            if fovImages[zi] is None:
+                continue
+
             [x, y, psfImage] = psf.get_psf(0.0, 0.0, zVals[zi], zPos, color)
             if psfImage is not None:
                 image += util.convolve(fovImages[zi], psfImage)
