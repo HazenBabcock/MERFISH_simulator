@@ -13,8 +13,6 @@
             "module": "merlin.analysis.preprocess",
             "parameters": {
 	        "warp_task": "FiducialCorrelationWarp",
-		"decon_filter_size": 11,
-		"decon_iterations": 2
             }
         },
         {
