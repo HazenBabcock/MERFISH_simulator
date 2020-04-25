@@ -11,7 +11,7 @@
 	"task" : "BarcodeLocationsUniform",
 	"module" : "mersim.barcode",
 	"parameters" : {
-	    "density" : 0.01,
+	    "density" : 0.04,
 	    "in_focus" : false
 	}
     },
