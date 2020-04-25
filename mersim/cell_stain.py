@@ -62,6 +62,16 @@ class CellStainImage(base.ImageBase):
                 image += util.convolve(fovImages[zi], psfImage)
 
         return image
+
+
+class CellStainImageUniformBackground(CellStainImage):
+    """
+    Make cell stain image with a uniform background.
+    """
+    def foreground(self, config, simParams, fov, iRound, desc):
+        image = super().foreground(config, simParams, fov, iRound, desc)    
+        image += self._parameters["background"]
+        return image
  
 
 class CellStainIntensityGaussian(base.SimulationBase):
@@ -200,6 +210,16 @@ class DAPIImage(CellStainImage):
         self.intensity_name = "dapi_intensity"
 
 
+class DAPIImageUniformBackground(CellStainImageUniformBackground):
+    """
+    Make DAPI images with a uniform background.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.intensity_name = "dapi_intensity"
+
+
 class DAPIIntensityGaussian(CellStainIntensityGaussian):
     """
     DAPI dyes with a Gaussian intensity distribution.
@@ -228,7 +248,17 @@ class PolyTImage(CellStainImage):
         super().__init__(**kwds)
 
         self.intensity_name = "polyt_intensity"
-            
+
+
+class PolyTImageUniformBackground(CellStainImageUniformBackground):
+    """
+    Make polyT images.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.intensity_name = "polyt_intensity"
+
 
 class PolyTIntensityGaussian(CellStainIntensityGaussian):
     """

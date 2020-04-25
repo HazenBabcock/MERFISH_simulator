@@ -1,0 +1,124 @@
+{
+    "sample_layout" : {
+	"task" : "Sample2DTissue",
+	"module" : "mersim.sample",
+	"parameters" : {
+	    "cellSize" : 20.0,
+	    "nucleusSize" : 5.0
+	}
+    },
+    "barcode_layout" : {
+	"task" : "BarcodeLocationsUniform",
+	"module" : "mersim.barcode",
+	"parameters" : {
+	    "density" : 0.01,
+	    "in_focus" : false
+	}
+    },
+    "barcode_intensity" : {
+	"task" : "BarcodeIntensityGaussian",
+	"module" : "mersim.barcode",
+	"parameters" : {
+	    "dropout_rate" : 0.2,
+	    "intensity_mean" : 1000,
+	    "intensity_sigma" : 30
+	}
+    },
+    "dapi_layout" : {
+	"task" : "DAPIUniform",
+	"module" : "mersim.cell_stain"
+    },
+    "dapi_intensity" : {
+	"task" : "DAPIIntensityGaussian",
+	"module" : "mersim.cell_stain",
+	"parameters" : {
+	    "intensity_mean" : 10,
+	    "intensity_sigma" : 3
+	}
+    },
+    "fiducial_layout" : {
+	"task" : "FiducialLocationsUniform",
+	"module" : "mersim.fiducials",
+	"parameters" : {
+	    "density" : 0.001,
+	    "margin" : 2.0
+	}
+    },
+    "fiducial_intensity" : {
+      "task" : "FiducialIntensityGaussian",
+      "module" : "mersim.fiducials",
+      "parameters" : {
+	 "intensity_mean" : 10000,
+	 "intensity_sigma" : 100
+      }
+    },
+    "polyt_layout" : {
+	"task" : "PolyTUniform",
+	"module" : "mersim.cell_stain"
+    },
+    "polyt_intensity" : {
+	"task" : "PolyTIntensityGaussian",
+	"module" : "mersim.cell_stain",
+	"parameters" : {
+	    "intensity_mean" : 4,
+	    "intensity_sigma" : 2
+	}
+    },
+    "blank_image" : {
+      "task" : "ImageBase",
+      "module" : "mersim.base"
+    },
+    "DAPI_image" : {
+	"task" : "DAPIImageUniformBackground",
+	"module" : "mersim.cell_stain",
+	"parameters" : {
+	    "background" : 5
+	}	
+    },
+    "polyT_image" : {
+	"task" : "PolyTImageUniformBackground",
+	"module" : "mersim.cell_stain",
+	"parameters" : {
+	    "background" : 5
+	}	
+    },
+    "fiducial_image" : {
+	"task" : "FiducialImageUniformBackground",
+	"module" : "mersim.fiducials",
+	"parameters" : {
+	    "background" : 5
+	}
+    },
+    "bit_image" : {
+	"task" : "BarcodeImageUniformBackground",
+	"module" : "mersim.barcode",
+	"parameters" : {
+	    "background" : 10
+	}
+    },
+    "microscope_psf" : {
+	"task" : "GibsonLanniPSF",
+	"module" : "mersim.microscope",
+	"parameters" : {
+	    "size" : 61,
+	    "z_spacing": 0.1,
+	    "M" : 60.0,
+            "NA" : 1.2,
+	    "ni0" : 1.405,
+	    "ni" : 1.405,
+	    "ns" : 1.33
+	}
+    },
+    "camera" : {
+	"task" : "CameraBasic",
+	"module" : "mersim.microscope",
+	"parameters" : {
+            "offset" : 100.0,
+	    "read_noise" : 1.0
+	}
+    },
+    "movie_writer" : {
+	"task" : "TiffWriter",
+	"module" : "mersim.movie_writers"
+    }
+}
