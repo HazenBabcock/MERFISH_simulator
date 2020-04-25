@@ -20,7 +20,7 @@ and put the your simulation parameters json file in this directory.
 
 3. Run simulator as follows:
 ```
-python ~/path/to/mersim/simulator.py \
+mersim \
    -a simulation_parameters.json \
    -m microscope_parameters.json \
    -o data_organization.csv \
