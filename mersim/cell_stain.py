@@ -67,7 +67,7 @@ class DAPIIntensityGaussian(base.SimulationBase):
     def run_task(self, config, simParams):
         super().run_task(config, simParams)
 
-        # Load barcode positions.
+        # Load DAPI positions.
         [locX, locY, locZ] = config["dapi_layout"].load_data()
 
         # Random intensity information.
