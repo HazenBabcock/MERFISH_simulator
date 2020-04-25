@@ -12,7 +12,7 @@
             "task": "DeconvolutionPreprocess",
             "module": "merlin.analysis.preprocess",
             "parameters": {
-	        "warp_task": "FiducialCorrelationWarp",
+	        "warp_task": "FiducialCorrelationWarp"
             }
         },
         {
