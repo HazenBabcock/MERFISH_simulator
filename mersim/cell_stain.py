@@ -45,17 +45,18 @@ class DAPIImage(base.ImageBase):
         # Initialize PSF.
         psf.initialize(config, simParams, color)
 
-        # Load location data.
-        [locX, locY, locZ, locInt] = config["dapi_intensity"].load_data(fov)
+        # Load images.
+        fovImages = []
+        for zi in range(simParams.get_number_z()):
+            fovImages.append(config["dapi_intensity"].load_data(fov, zi))
 
-        # Draw PSFs.
-        for i in range(locX.size):
-            [x, y, psfImage] = psf.get_psf(locX[i], locY[i], locZ[i], zPos, color)
+        # Convolve images with PSFs.
+        zVals = simParams.get_z_positions()
 
-            # If the PSF is too dim to be relevant psfImage will be None.
+        for zi in range(simParams.get_number_z()):
+            [x, y, psfImage] = psf.get_psf(0.0, 0.0, zVals[zi], zPos, color)
             if psfImage is not None:
-                psfImage = psfImage * locInt[i]
-                util.add_images(image, psfImage, x, y)
+                image += util.convolve(fovImages[zi], psfImage)
 
         return image
 
@@ -67,59 +68,50 @@ class DAPIIntensityGaussian(base.SimulationBase):
     def run_task(self, config, simParams):
         super().run_task(config, simParams)
 
-        # Load DAPI positions.
-        [locX, locY, locZ] = config["dapi_layout"].load_data()
+        # Load DAPI images.
+        locImages = config["dapi_layout"].load_data()
 
-        # Random intensity information.
-        locInt = np.random.normal(self._parameters["intensity_mean"],
-                                  self._parameters["intensity_sigma"],
-                                  locX.size)
-        locInt = np.clip(locInt, 1, None)
-
+        # Load FOV.
+        [allFOV, fovUnion] = util.all_fov(simParams)
+        minx, miny, maxx, maxy = list(map(int, fovUnion.bounds))
+                    
         # Add intensity information, save by position.
         #
         fovSize = simParams.get_microscope().get_image_dimensions()
 
-        for fov in range(simParams.get_number_positions()):
-            fovRect = simParams.get_fov_rect(fov)
-            ox, oy = simParams.get_fov_origin(fov)
-
-            tmpX = []
-            tmpY = []
-            tmpZ = []
-            tmpInt = []
-            for j in range(locX.size):
-                pnt = shapely.geometry.Point(locX[j], locY[j])
-                if fovRect.contains(pnt):
-                    tmpX.append(locX[j] - ox)
-                    tmpY.append(locY[j] - oy)
-                    tmpZ.append(locZ[j])
-                    tmpInt.append(locInt[j])
-
-            tmpX = np.array(tmpX)
-            tmpY = np.array(tmpY)
-            tmpZ = np.array(tmpZ)
-            tmpInt = np.array(tmpInt)
-
-            self.save_data([tmpX, tmpY, tmpZ, tmpInt], fov)
-
-            # Make plots.
-            fig = plt.figure(figsize = (8,8))
-
-            plt.scatter(tmpX, tmpY, marker = 'x')
-            plt.xlim(0, fovSize[0])
-            plt.ylim(0, fovSize[1])
-
-            plt.title("fov {0:d}".format(fov))
-            plt.xlabel("pixels")
-            plt.ylabel("pixels")
+        for zi in range(simParams.get_number_z()):
+            locImage = locImages[zi].astype(np.float32)
+            locImage = locImages[zi] * np.random.normal(self._parameters["intensity_mean"],
+                                                        self._parameters["intensity_sigma"],
+                                                        locImages[zi].shape)
+            locImage = np.clip(locImage, 1, None)
             
-            fname = "fov_{0:d}.pdf".format(fov)
-            fig.savefig(os.path.join(self.get_path(), fname),
-                        format='pdf',
-                        dpi=100)
+            for fov in range(simParams.get_number_positions()):
+                ox, oy = list(map(int, simParams.get_fov_origin(fov)))
+                ox -= minx
+                oy -= miny
+
+                fovImage = locImage[ox:ox + fovSize[0],oy:oy + fovSize[1]]
+
+                # Make plots.
+                fig = plt.figure(figsize = (8,8))
+
+                plt.imshow(np.transpose(fovImage), cmap = 'gray')
+                plt.xlim(0, fovSize[0])
+                plt.ylim(0, fovSize[1])
+                
+                plt.title("fov {0:d}".format(fov))
+                plt.xlabel("pixels")
+                plt.ylabel("pixels")
             
-            plt.close()
+                fname = "fov_{0:d}_{1:d}.pdf".format(fov, zi)
+                fig.savefig(os.path.join(self.get_path(), fname),
+                            format='pdf',
+                            dpi=100)
+                
+                plt.close()
+                
+                self.save_data(fovImage, fov, zi)
 
 
 class DAPIUniform(base.SimulationBase):
@@ -130,35 +122,29 @@ class DAPIUniform(base.SimulationBase):
         """
         super().run_task(config, simParams)
 
-        spacing = self.get_parameter("spacing")
-        dither = self.get_parameter("dither", 0.0)
-        inFocus = self.get_parameter("in_focus", False)
-        
         nZ = simParams.get_number_z()
-        deltaZ = simParams.get_z_delta()
 
+        # Load FOV.
+        [allFOV, fovUnion] = util.all_fov(simParams)
+        
         # Load polygons describing sample geometry.
         sampleData = config["sample_layout"].load_data()
 
+        locImages = []
         if 'nucleus' in sampleData:
             polygons = sampleData['nucleus']
             assert (nZ == len(polygons))
-            locL = uniform_spots(polygons, spacing, deltaZ, inFocus, dither)
+
+            for zi, zPlane in enumerate(polygons):
+                locImages.append(util.uniform_fill(zPlane, fovUnion.bounds))
         else:
             return
 
         # Save locations.
         #
-        # Note: Array is x, y, z.
-        #
-        [locX, locY, locZ] = locL
-        self.save_data([locX, locY, locZ])
-        print("  created {0:d} DAPI locations".format(locX.size))
+        self.save_data(locImages)
 
         # Reference images.
-        allFOV = []
-        for fov in range(simParams.get_number_positions()):
-            allFOV.append(simParams.get_fov_rect(fov))
 
         for zi in range(simParams.get_number_z()):
             fig = plt.figure(figsize = (8,8))
@@ -170,17 +156,20 @@ class DAPIUniform(base.SimulationBase):
                 y = list(coords[1])
                 plt.plot(x, y, color = 'gray')
 
+            # Draw DAPI array.
+            minx, miny, maxx, maxy = fovUnion.bounds
+            plt.imshow(1 - np.transpose(locImages[zi]),
+                       extent = [minx, maxx, miny, maxy],
+                       origin = ('lower', 'lower'),
+                       cmap = 'gray')
+
             # Draw sample geometry.
             for pType in ['extra-cellular', 'cytoplasm', 'nucleus']:
                 if pType in sampleData:
                     zPolygons = sampleData[pType][zi]
                     for poly in zPolygons:
                         coords = poly.exterior.coords.xy
-                        plt.plot(coords[0], coords[1], color = 'black')
-
-            # Draw locations.
-            mask = ((locZ/deltaZ).astype(np.int) == zi)
-            plt.scatter(locX[mask], locY[mask], marker = '.')
+                        plt.plot(coords[0], coords[1], color = 'blue')
 
             ax = plt.gca()
             ax.set_aspect('equal', 'datalim')

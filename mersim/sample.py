@@ -32,6 +32,7 @@ import shapely.geometry
 import shapely.ops
 
 import mersim.base as base
+import mersim.util as util
 
 
 class Sample2DTissue(base.SimulationBase):
@@ -54,11 +55,7 @@ class Sample2DTissue(base.SimulationBase):
 
         # Figure out total imaging area.
         #
-        allFOV = []
-        for fov in range(simParams.get_number_positions()):
-            allFOV.append(simParams.get_fov_rect(fov))
-
-        fovUnion = shapely.ops.unary_union(allFOV)
+        [allFOV, fovUnion] = util.all_fov(simParams)
         [minx, miny, maxx, maxy] = fovUnion.bounds
         
         bndRect = shapely.geometry.Polygon([[minx - cellSize, miny - cellSize],

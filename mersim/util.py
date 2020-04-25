@@ -2,11 +2,25 @@
 """
 Utility functions.
 """
+import cv2
 import numpy as np
 import shapely
 import shapely.geometry
+import skimage
+import skimage.draw
 
 
+def all_fov(simParams):
+    """
+    Return all FOV and their union.
+    """
+    allFOV = []
+    for fov in range(simParams.get_number_positions()):
+        allFOV.append(simParams.get_fov_rect(fov))
+
+    return [allFOV, shapely.ops.unary_union(allFOV)]
+
+    
 def add_images(im1, im2, xo, yo):
     """
     Add im2 to im1, it is assumed that im2 is smaller than im1.
@@ -29,6 +43,11 @@ def concat(list1, list2):
         for i in range(len(list1)):
             list1[i] = np.concatenate((list1[i], list2[i]))
         return list1
+
+
+def convolve(image, kernel):
+    return cv2.filter2D(image, -1, kernel,
+                        borderType = cv2.BORDER_REPLICATE)
 
     
 def random_points_in_shape(poly, density):
@@ -54,6 +73,21 @@ def random_points_in_shape(poly, density):
     return [pntX, pntY]
 
 
+def uniform_fill(polygons, bounds):
+    """
+    Return binary image of the polygons in poly.
+    """
+    minx, miny, maxx, maxy = list(map(int, bounds))
+    img = np.zeros((maxx - minx, maxy - miny), dtype = np.uint8)
+    for poly in polygons:
+        r = np.array(poly.exterior.coords.xy[0]) - minx
+        c = np.array(poly.exterior.coords.xy[1]) - miny
+        [rr, cc] = skimage.draw.polygon(r, c, img.shape)
+        img[rr, cc] = 1
+
+    return img
+
+    
 def uniform_points_in_shape(poly, spacing, dither = 0.0):
     """
     Return XY points uniformly distributed (on a grid) inside
