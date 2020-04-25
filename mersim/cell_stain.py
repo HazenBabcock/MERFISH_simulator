@@ -30,9 +30,9 @@ def uniform_spots(polygons, spacing, deltaZ, inFocus, dither):
     return locL
 
 
-class DAPIImage(base.ImageBase):
+class CellStainImage(base.ImageBase):
     """
-    Make DAPI images.
+    Make cell stain images.
     """
     def foreground(self, config, simParams, fov, iRound, desc):
         image = super().foreground(config, simParams, fov, iRound, desc)
@@ -48,7 +48,7 @@ class DAPIImage(base.ImageBase):
         # Load images.
         fovImages = []
         for zi in range(simParams.get_number_z()):
-            fovImages.append(config["dapi_intensity"].load_data(fov, zi))
+            fovImages.append(config[self.intensity_name].load_data(fov, zi))
 
         # Convolve images with PSFs.
         zVals = simParams.get_z_positions()
@@ -59,17 +59,17 @@ class DAPIImage(base.ImageBase):
                 image += util.convolve(fovImages[zi], psfImage)
 
         return image
+ 
 
-
-class DAPIIntensityGaussian(base.SimulationBase):
+class CellStainIntensityGaussian(base.SimulationBase):
     """
-    DAPI dyes with a Gaussian intensity distribution.
+    Cell stain dyes with a Gaussian intensity distribution.
     """
     def run_task(self, config, simParams):
         super().run_task(config, simParams)
 
         # Load DAPI images.
-        locImages = config["dapi_layout"].load_data()
+        locImages = config[self.layout_name].load_data()
 
         # Load FOV.
         [allFOV, fovUnion] = util.all_fov(simParams)
@@ -114,11 +114,11 @@ class DAPIIntensityGaussian(base.SimulationBase):
                 self.save_data(fovImage, fov, zi)
 
 
-class DAPIUniform(base.SimulationBase):
+class CellStainUniform(base.SimulationBase):
 
     def run_task(self, config, simParams):
         """
-        Uniformly spaced dyes in the nucleus.
+        Uniformly spaced dyes.
         """
         super().run_task(config, simParams)
 
@@ -131,8 +131,8 @@ class DAPIUniform(base.SimulationBase):
         sampleData = config["sample_layout"].load_data()
 
         locImages = []
-        if 'nucleus' in sampleData:
-            polygons = sampleData['nucleus']
+        if self.region_stained in sampleData:
+            polygons = sampleData[self.region_stained]
             assert (nZ == len(polygons))
 
             for zi, zPlane in enumerate(polygons):
@@ -186,6 +186,62 @@ class DAPIUniform(base.SimulationBase):
             plt.close()
 
 
-class PolyTImage(base.ImageBase):
-    pass
 
+class DAPIImage(CellStainImage):
+    """
+    Make DAPI images.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.intensity_name = "dapi_intensity"
+
+
+class DAPIIntensityGaussian(CellStainIntensityGaussian):
+    """
+    DAPI dyes with a Gaussian intensity distribution.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.layout_name = "dapi_layout"
+
+
+class DAPIUniform(CellStainUniform):
+    """
+    Uniformly space DAPI dyes.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.region_stained = "nucleus"
+
+
+class PolyTImage(CellStainImage):
+    """
+    Make polyT images.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.intensity_name = "polyt_intensity"
+            
+
+class PolyTIntensityGaussian(CellStainIntensityGaussian):
+    """
+    PolyT dyes with a Gaussian intensity distribution.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.layout_name = "polyt_layout"
+
+
+class PolyTUniform(CellStainUniform):
+    """
+    Uniformly spaced polyT dyes.
+    """
+    def __init__(self, **kwds):
+        super().__init__(**kwds)
+
+        self.region_stained = "cytoplasm"
