@@ -108,6 +108,20 @@ def build_parser():
                         help='name of the position file to use')
     return parser
 
+
+def mersim():
+    parser = build_parser()
+    args = parser.parse_args()
+
+    config = mint.loadParameters(args.simulation_parameters)
+    dataPath = mint.getDataDirectory(args.dataset)
+    simParams = SimulationParameters(codebook = args.codebook,
+                                     dataOrganization = args.data_organization,
+                                     microscope = args.microscope_parameters,
+                                     positions = args.positions)
+
+    simulate(config, simParams, dataPath)
+
     
 def simulate(config, simParams, dataPath):
     """
@@ -165,15 +179,4 @@ def simulate(config, simParams, dataPath):
 
 
 if (__name__ == "__main__"):
-
-    parser = build_parser()
-    args = parser.parse_args()
-
-    config = mint.loadParameters(args.simulation_parameters)
-    dataPath = mint.getDataDirectory(args.dataset)
-    simParams = SimulationParameters(codebook = args.codebook,
-                                     dataOrganization = args.data_organization,
-                                     microscope = args.microscope_parameters,
-                                     positions = args.positions)
-
-    simulate(config, simParams, dataPath)
+    mersim()
