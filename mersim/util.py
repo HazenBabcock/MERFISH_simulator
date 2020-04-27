@@ -73,12 +73,12 @@ def random_points_in_shape(poly, density):
     return [pntX, pntY]
 
 
-def uniform_fill(polygons, bounds):
+def uniform_fill(polygons, bounds, fovShape):
     """
     Return binary image of the polygons in poly.
     """
     minx, miny, maxx, maxy = list(map(int, bounds))
-    img = np.zeros((maxx - minx, maxy - miny), dtype = np.uint8)
+    img = np.zeros(fovShape, dtype = np.uint8)
     for poly in polygons:
         r = np.array(poly.exterior.coords.xy[0]) - minx
         c = np.array(poly.exterior.coords.xy[1]) - miny

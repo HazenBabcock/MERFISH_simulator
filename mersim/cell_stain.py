@@ -136,6 +136,7 @@ class CellStainUniform(base.SimulationBase):
         super().run_task(config, simParams)
 
         nZ = simParams.get_number_z()
+        fovShape = simParams.get_microscope().get_image_dimensions()
 
         # Load FOV.
         [allFOV, fovUnion] = util.all_fov(simParams)
@@ -149,7 +150,7 @@ class CellStainUniform(base.SimulationBase):
             assert (nZ == len(polygons))
 
             for zi, zPlane in enumerate(polygons):
-                locImages.append(util.uniform_fill(zPlane, fovUnion.bounds))
+                locImages.append(util.uniform_fill(zPlane, fovUnion.bounds, fovShape))
         else:
             return
 
