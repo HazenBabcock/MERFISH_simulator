@@ -4,6 +4,7 @@ MERFISH simulator core.
 """
 import argparse
 import importlib
+import numpy as np
 import os
 import shapely
 import shapely.geometry
@@ -106,6 +107,8 @@ def build_parser():
                         help='name of the microscope parameters to use')
     parser.add_argument('-p', '--positions',
                         help='name of the position file to use')
+    parser.add_argument('-s', '--seed',
+                        help='number to use random number seed')
     return parser
 
 
@@ -113,6 +116,9 @@ def mersim():
     parser = build_parser()
     args = parser.parse_args()
 
+    if args.seed is not None:
+        np.random.seed(int(args.seed))
+    
     config = mint.loadParameters(args.simulation_parameters)
     dataPath = mint.getDataDirectory(args.dataset)
     simParams = SimulationParameters(codebook = args.codebook,
