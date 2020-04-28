@@ -179,7 +179,8 @@ class Positions(object):
 
     def get_number_positions(self):
         return self.data.shape[0]
-    
+
+
 class Microscope(object):
     """
     Provides information about the microscope.
