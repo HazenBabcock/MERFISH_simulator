@@ -68,14 +68,15 @@ class Sample2DTissue(base.SimulationBase):
         xv = np.arange(minx - cellSize, maxx + cellSize, cellSize)
         yv = np.arange(miny - cellSize, maxy + cellSize, cellSize)
 
+        margin = 1.2
         cellLocs = []
         for i in range(xv.size):
             for j in range(yv.size):
-                pnt = shapely.geometry.Point(np.random.uniform(xv[i] + 1.1*nucleusSize,
-                                                               xv[i] + cellSize - 1.1*nucleusSize),
-                                             np.random.uniform(yv[j] + 1.1*nucleusSize,
-                                                               yv[j] + cellSize - 1.1*nucleusSize))
-        
+                pnt = shapely.geometry.Point(np.random.uniform(xv[i] + margin*nucleusSize,
+                                                               xv[i] + cellSize - margin*nucleusSize),
+                                             np.random.uniform(yv[j] + margin*nucleusSize,
+                                                               yv[j] + cellSize - margin*nucleusSize))
+
                 if bndRect.contains(pnt):
                     cellLocs.append(pnt)
 

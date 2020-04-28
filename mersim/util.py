@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import shapely
 import shapely.geometry
+import scipy
+import scipy.ndimage
 import skimage
 import skimage.draw
 
@@ -49,7 +51,20 @@ def convolve(image, kernel):
     return cv2.filter2D(image, -1, kernel,
                         borderType = cv2.BORDER_REPLICATE)
 
-    
+
+def gradient_fill(polygons, bounds, fovShape, gradient = 0.1):
+    """
+    Return image with gradient fill. The 'on' values image
+    will start at 1.0 and increase by gradient * pixel
+    distance from the edge of the fill.
+    """
+    img = uniform_fill(polygons, bounds, fovShape)
+    img_grad_fill = scipy.ndimage.morphology.distance_transform_edt(img)
+    img_grad_fill = gradient * img_grad_fill + (1.0 - gradient)
+
+    return img_grad_fill
+
+
 def random_points_in_shape(poly, density):
     """
     Return XY points randomly distributed inside a polygon.
@@ -73,6 +88,7 @@ def random_points_in_shape(poly, density):
     return [pntX, pntY]
 
 
+    
 def uniform_fill(polygons, bounds, fovShape):
     """
     Return binary image of the polygons in poly.
