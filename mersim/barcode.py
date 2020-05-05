@@ -196,13 +196,15 @@ class BarcodeLocationsUniform(base.SimulationBase):
         #
         cellIndex = np.zeros(codeX.size, dtype = np.int) - 1
         with open(os.path.join(self.get_path(), "barcodes.csv"), "w") as fp:
-            fp.write(",".join(["barcode_id", "global_x", "global_y", "cell_index"]) + "\n")
+            fp.write(",".join(["barcode_id", "global_x", "global_y",
+                               "cell_index", "z"]) + "\n")
             np.savetxt(fp,
                        np.column_stack([codeID,
                                         codeX * umPerPix,
                                         codeY * umPerPix,
-                                        cellIndex]),
-                       fmt = "%d,%.2f,%.2f,%d")
+                                        cellIndex,
+                                        codeZ]),
+                       fmt = "%d,%.2f,%.2f,%d,%.3f")
 
         # Reference images.
         allFOV = []
