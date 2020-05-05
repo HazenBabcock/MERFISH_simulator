@@ -36,6 +36,9 @@ class CellStainImage(base.ImageBase):
     """
     def foreground(self, config, simParams, fov, iRound, desc):
         image = super().foreground(config, simParams, fov, iRound, desc)
+        if not self.intensity_name in config:
+            return image
+        
         psf = config["microscope_psf"]
 
         # Figure out color and z plane.
