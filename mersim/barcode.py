@@ -32,6 +32,13 @@ def random_barcodes(polygons, nBarcodes, density, deltaZ, inFocus):
     return codeL
 
 
+def random_mask(nBits, dropoutRate):
+    dMask = np.random.uniform(size = nBits)
+    dMask[(dMask < dropoutRate)] = 0.0
+    dMask[(dMask >= dropoutRate)] = 1.0
+    return dMask
+
+
 class BarcodeImage(base.ImageBase):
     """
     Make barcode images.
@@ -81,6 +88,8 @@ class BarcodeIntensityGaussian(base.SimulationBase):
     def run_task(self, config, simParams):
         super().run_task(config, simParams)
 
+        minimumOn = self.get_parameter("minimum_on", 0)
+        
         # Load barcode positions.
         [codeX, codeY, codeZ, codeId] = config["barcode_layout"].load_data()
 
@@ -90,14 +99,19 @@ class BarcodeIntensityGaussian(base.SimulationBase):
         # Random intensity information.
         codeInt = np.zeros((codeX.size, barcodes.shape[1]))
         for i in range(codeX.size):
-            bInt = np.random.normal(self._parameters["intensity_mean"],
-                                    self._parameters["intensity_sigma"],
+            barC = barcodes[codeId[i],:]
+            
+            bInt = np.random.normal(self.get_parameter("intensity_mean"),
+                                    self.get_parameter("intensity_sigma"),
                                     barcodes.shape[1])
-            dMask = np.random.uniform(size = barcodes.shape[1])
-            dMask[(dMask < self._parameters["dropout_rate"])] = 0.0
-            dMask[(dMask >= self._parameters["dropout_rate"])] = 1.0
+            
+            dMask = random_mask(barcodes.shape[1],
+                                self.get_parameter("dropout_rate"))
+            while(np.sum(dMask*barC) < minimumOn):
+                dMask = random_mask(barcodes.shape[1],
+                                    self.get_parameter("dropout_rate"))
 
-            codeInt[i,:] = bInt * dMask * barcodes[codeId[i],:]
+            codeInt[i,:] = bInt * dMask * barC
 
         # Add intensity information, save by position. We include the
         # barcode ID to make it easier to compare MERlin results to
