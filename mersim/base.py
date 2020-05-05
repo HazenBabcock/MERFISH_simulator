@@ -92,14 +92,14 @@ class SimulationBase(Base):
             return None
 
         with open(fname, "rb") as fp:
-            a_object = pickle.load(fp)
-        return a_object
+            aObject = pickle.load(fp)
+        return aObject
 
     def run_task(self, config, simParams):
         print()
         print("Running:", self._taskName)
 
-    def save_data(self, a_object, fov = None, zi = None):
+    def save_data(self, aObject, fov = None, zi = None):
         fname = os.path.join(self.get_path(), self.get_fov_name(fov, zi))
         with open(fname, "wb") as fp:
-            pickle.dump(a_object, fp)
+            pickle.dump(aObject, fp)
