@@ -55,8 +55,8 @@ class Sample2DTissue(base.SimulationBase):
 
         # Figure out total imaging area.
         #
-        [allFOV, fovUnion] = util.all_fov(simParams)
-        [minx, miny, maxx, maxy] = fovUnion.bounds
+        [allFOV, allUnion, allSize] = util.all_fov(simParams)
+        [minx, miny, maxx, maxy] = allUnion.bounds
         
         bndRect = shapely.geometry.Polygon([[minx - cellSize, miny - cellSize],
                                             [minx - cellSize, maxy + cellSize],
@@ -99,7 +99,7 @@ class Sample2DTissue(base.SimulationBase):
         roughCells = []
         for i in range(points.shape[0]):
             pnt = shapely.geometry.Point(points[i,0], points[i,1])
-            if fovUnion.contains(pnt):
+            if allUnion.contains(pnt):
                 for poly in polygons:
                     if poly.contains(pnt):
                         roughCells.append([poly, pnt])

@@ -88,9 +88,9 @@ class CellStainIntensityGaussian(base.SimulationBase):
         locImages = config[self.layout_name].load_data()
 
         # Load FOV.
-        [allFOV, fovUnion] = util.all_fov(simParams)
-        minx, miny, maxx, maxy = list(map(int, fovUnion.bounds))
-                    
+        [allFOV, allUnion, allSize] = util.all_fov(simParams)
+        minx, miny, maxx, maxy = list(map(int, allUnion.bounds))
+
         # Add intensity information, save by position.
         #
         fovSize = simParams.get_microscope().get_image_dimensions()
@@ -155,10 +155,9 @@ class CellStainGradient(base.SimulationBase):
         gradient = self.get_parameter("gradient", 0.02)
 
         nZ = simParams.get_number_z()
-        fovShape = simParams.get_microscope().get_image_dimensions()
 
         # Load FOV.
-        [allFOV, fovUnion] = util.all_fov(simParams)
+        [allFOV, allUnion, allSize] = util.all_fov(simParams)
         
         # Load polygons describing sample geometry.
         sampleData = config["sample_layout"].load_data()
@@ -170,8 +169,8 @@ class CellStainGradient(base.SimulationBase):
 
             for zi, zPlane in enumerate(polygons):
                 locImages.append(util.gradient_fill(zPlane,
-                                                    fovUnion.bounds,
-                                                    fovShape,
+                                                    allUnion.bounds,
+                                                    allSize,
                                                     gradient))
         else:
             return
@@ -193,7 +192,7 @@ class CellStainGradient(base.SimulationBase):
                 plt.plot(x, y, color = 'gray')
 
             # Draw DAPI array.
-            minx, miny, maxx, maxy = fovUnion.bounds
+            minx, miny, maxx, maxy = allUnion.bounds
             plt.imshow(np.transpose(locImages[zi]),
                        extent = [minx, maxx, miny, maxy],
                        origin = ('lower', 'lower'),
@@ -231,10 +230,10 @@ class CellStainUniform(base.SimulationBase):
         super().run_task(config, simParams)
 
         nZ = simParams.get_number_z()
-        fovShape = simParams.get_microscope().get_image_dimensions()
+        #fovShape = simParams.get_microscope().get_image_dimensions()
 
         # Load FOV.
-        [allFOV, fovUnion] = util.all_fov(simParams)
+        [allFOV, allUnion, allSize] = util.all_fov(simParams)
         
         # Load polygons describing sample geometry.
         sampleData = config["sample_layout"].load_data()
@@ -245,7 +244,7 @@ class CellStainUniform(base.SimulationBase):
             assert (nZ == len(polygons))
 
             for zi, zPlane in enumerate(polygons):
-                locImages.append(util.uniform_fill(zPlane, fovUnion.bounds, fovShape))
+                locImages.append(util.uniform_fill(zPlane, allUnion.bounds, allSize))
         else:
             return
 
@@ -266,10 +265,10 @@ class CellStainUniform(base.SimulationBase):
                 plt.plot(x, y, color = 'gray')
 
             # Draw DAPI array.
-            minx, miny, maxx, maxy = fovUnion.bounds
+            minx, miny, maxx, maxy = allUnion.bounds
             plt.imshow(1 - np.transpose(locImages[zi]),
                        extent = [minx, maxx, miny, maxy],
-                       origin = ('lower', 'lower'),
+                       origin = 'lower',
                        cmap = 'gray')
 
             # Draw sample geometry.

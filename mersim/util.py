@@ -3,6 +3,7 @@
 Utility functions.
 """
 import cv2
+import math
 import numpy as np
 import shapely
 import shapely.geometry
@@ -20,7 +21,9 @@ def all_fov(simParams):
     for fov in range(simParams.get_number_positions()):
         allFOV.append(simParams.get_fov_rect(fov))
 
-    return [allFOV, shapely.ops.unary_union(allFOV)]
+    allUnion = shapely.ops.unary_union(allFOV)
+    b = allUnion.bounds
+    return [allFOV, allUnion, [math.ceil(b[2]-b[0]), math.ceil(b[3]-b[1])]]
 
     
 def add_images(im1, im2, xo, yo):
