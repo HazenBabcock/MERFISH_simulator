@@ -52,7 +52,7 @@ class ImageBase(Base):
         The default behavior is to return image that is all zeros.
         """
         imageSize = simParams.get_microscope().get_image_dimensions()
-        return np.zeros(imageSize, dtype = np.float)
+        return np.zeros(imageSize, dtype = float)
         
     def make_image(self, config, simParams, fov, iRound, desc):
         """

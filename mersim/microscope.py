@@ -180,6 +180,6 @@ class IdealCamera(base.Base):
 class CameraBasic(base.Base):
 
     def camera_image(self, image):
-        image = np.random.poisson(image, image.shape).astype(np.float)
+        image = np.random.poisson(image, image.shape).astype(float)
         image += np.random.normal(0.0, self._parameters["read_noise"], image.shape)
         return image + self._parameters["offset"]

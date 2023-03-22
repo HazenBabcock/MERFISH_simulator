@@ -208,7 +208,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
 
         # Save a text version for easier MERlin comparison.
         #
-        cellIndex = np.zeros(codeX.size, dtype = np.int) - 1
+        cellIndex = np.zeros(codeX.size, dtype = int) - 1
         with open(os.path.join(self.get_path(), "barcodes.csv"), "w") as fp:
             fp.write(",".join(["barcode_id", "global_x", "global_y",
                                "cell_index", "z"]) + "\n")
@@ -244,7 +244,7 @@ class BarcodeLocationsUniform(base.SimulationBase):
                         plt.plot(coords[0], coords[1], color = 'black')
 
             # Draw barcode locations.
-            mask = ((codeZ/deltaZ).astype(np.int) == zi)
+            mask = ((codeZ/deltaZ).astype(int) == zi)
             plt.scatter(codeX[mask], codeY[mask], marker = 'x')
             
             ax = plt.gca()
